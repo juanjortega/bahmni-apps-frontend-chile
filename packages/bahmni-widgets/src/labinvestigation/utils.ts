@@ -165,6 +165,17 @@ export function extractObservationsFromBundle(
     .filter((obs): obs is Observation => !!obs);
 }
 
+// t() returns the key itself when there is no translation; keep the English
+// literal then, as before.
+function translateOr(
+  t: (key: string) => string,
+  key: string,
+  fallback: string,
+): string {
+  const translated = t(key);
+  return translated && translated !== key ? translated : fallback;
+}
+
 export function formatObservationsAsLabTestResults(
   observations: Observation[],
   t: (key: string) => string,
@@ -183,7 +194,11 @@ export function formatObservationsAsLabTestResults(
     } else if (obs.valueDateTime) {
       value = formatDateTime(obs.valueDateTime, t).formattedResult;
     } else if (obs.valueBoolean !== undefined) {
-      value = obs.valueBoolean ? 'Positive' : 'Negative';
+      value = translateOr(
+        t,
+        obs.valueBoolean ? 'LAB_RESULT_POSITIVE' : 'LAB_RESULT_NEGATIVE',
+        obs.valueBoolean ? 'Positive' : 'Negative',
+      );
     } else if (obs.valueInteger !== undefined) {
       value = obs.valueInteger.toString();
     } else if (obs.valueString) {

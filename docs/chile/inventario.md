@@ -19,9 +19,9 @@ Prioridad: **1** lo usa el personal todos los días, **2** importante, **3** des
 | mejora | commits Angular | estado en React | prio | notas |
 |---|---|---|---|---|
 | Sexo del paciente traducido en la cabecera | — (fallo propio de React) | **hecho** | 1 | GENDER_F/M/O/U |
-| Idioma: prioridad elección explícita → `defaultLocale` del usuario → GP `default_locale`; selector visible | 2a08e6c26, 14edfc490, 0ca59de5a, 95a86849e, 2ee7346f7 | portar | 1 | React sólo lee `NG_TRANSLATE_LANG_KEY` (por defecto `en`) y no tiene selector |
-| Hora en el formato del idioma (24 h en `es`) | 65a603644, 0745a8a7a | portar | 1 | `DEFAULT_TIME_FORMAT = 'h:mm a'` fijo; date-fns sin locale |
-| Booleanos «Yes/No» traducidos | 4772afa60, fecead4ff, cd92ba74b | portar | 1 | `valueAsString` del servidor viene en inglés |
+| Idioma: prioridad elección explícita → `defaultLocale` del usuario → GP `default_locale`; selector visible | 2a08e6c26, 14edfc490, 0ca59de5a, 95a86849e, 2ee7346f7 | **hecho** | 1 | `resolveUserLocale`; selector en el menú de usuario con los `allowedLocales` del servidor |
+| Hora en el formato del idioma (24 h en `es`) | 65a603644, 0745a8a7a | **hecho** | 1 | `getTimeFormat()` y `getDateFnsLocale()`; meses en el idioma de la GUI |
+| Booleanos «Yes/No» traducidos | 4772afa60, fecead4ff, cd92ba74b | existe / **hecho** | 1 | las observaciones FHIR ya usan `YES`/`NO`; el resultado de laboratorio decía «Positive/Negative» fijo, ahora `LAB_RESULT_POSITIVE/NEGATIVE` |
 | Errores HTTP por idioma, sin la excepción Java en los 500 | 602f288a5 | portar | 2 | 400/409 conservan el mensaje del servidor |
 | «No tienes aplicaciones» en vez de pantalla en blanco | 6a602d48d | existe | — | React muestra «No hay módulos disponibles» |
 | Logout encadenado OpenMRS → oauth2-proxy → Keycloak; adoptar sesión del borde | d7df5c60d, 78ee7956f, 12ddea673, 3bb38ad5d | portar | 1 | React hace `DELETE /session` y vuelve al login legacy; bajo SSO debe ir a `/bahmni/logout.html` |

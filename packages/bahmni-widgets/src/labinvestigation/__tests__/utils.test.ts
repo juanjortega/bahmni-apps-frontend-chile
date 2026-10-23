@@ -564,6 +564,29 @@ describe('Lab Investigation Utils', () => {
       expect(result[0].unit).toBe('');
     });
 
+    it('translates boolean results with LAB_RESULT_POSITIVE / LAB_RESULT_NEGATIVE', () => {
+      const tEs = (key: string) =>
+        ({ LAB_RESULT_POSITIVE: 'Positivo', LAB_RESULT_NEGATIVE: 'Negativo' })[
+          key
+        ] ?? key;
+      const observation = {
+        resourceType: 'Observation' as const,
+        id: 'obs-1',
+        status: 'final' as const,
+        code: { text: 'COVID-19 Test' },
+      };
+
+      const result = formatObservationsAsLabTestResults(
+        [
+          { ...observation, valueBoolean: true },
+          { ...observation, id: 'obs-2', valueBoolean: false },
+        ],
+        tEs,
+      );
+
+      expect(result.map((r) => r.value)).toEqual(['Positivo', 'Negativo']);
+    });
+
     it('should handle integer values', () => {
       const mockObservations = [
         {

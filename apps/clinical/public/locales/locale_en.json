@@ -356,6 +356,8 @@
   "INVESTIGATION_PANEL": "Panel",
   "INVESTIGATION_PRIORITY_URGENT": "Urgent",
   "IN_PROGRESS_STATUS": "In Progress",
+  "LAB_RESULT_NEGATIVE": "Negative",
+  "LAB_RESULT_POSITIVE": "Positive",
   "LAB_TEST_ACTIONS": "Action",
   "LAB_TEST_ERROR_LOADING": "Error loading Lab tests",
   "LAB_TEST_LOADING": "Loading Lab tests...",
