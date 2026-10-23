@@ -5,6 +5,9 @@ export {
   useTranslation,
   normalizeTranslationKey,
   getUserPreferredLocale,
+  resolveUserLocale,
+  getAllowedLocales,
+  setUserLocale,
 } from './i18n';
 export { useCamera } from './cameraService';
 export {

@@ -1,10 +1,17 @@
-import { get } from '../api';
+import { get, post } from '../api';
+import { SESSION_URL } from '../constants/app';
 import {
   BUNDLED_TRANSLATIONS_URL_TEMPLATE,
   LOCALE_STORAGE_KEY,
   DEFAULT_LOCALE,
   CONFIG_TRANSLATIONS_URL_TEMPLATE,
+  EXPLICIT_LOCALE_STORAGE_KEY,
 } from './constants';
+
+interface SessionLocaleResponse {
+  locale?: string;
+  allowedLocales?: string[];
+}
 
 /**
  * Fetches user's preferred locale from the local storage.
@@ -14,6 +21,51 @@ export const getUserPreferredLocale = (): string => {
   const localeStorageKey = localStorage.getItem(LOCALE_STORAGE_KEY);
   const userLocale = localeStorageKey ?? DEFAULT_LOCALE;
   return userLocale;
+};
+
+/**
+ * Resolves the UI locale with the same priority as the Chilean AngularJS UI:
+ * the locale the user picked explicitly, then the OpenMRS session locale (which
+ * already resolves the user's defaultLocale and then the default_locale global
+ * property), then whatever is stored, then DEFAULT_LOCALE.
+ */
+export const resolveUserLocale = async (): Promise<string> => {
+  const explicit = localStorage.getItem(EXPLICIT_LOCALE_STORAGE_KEY);
+  if (explicit) return explicit;
+  try {
+    const session = await get<SessionLocaleResponse>(SESSION_URL);
+    if (session?.locale) return session.locale;
+  } catch {
+    // No session yet (e.g. before login): fall back to the stored locale.
+  }
+  return getUserPreferredLocale();
+};
+
+/**
+ * Locales the OpenMRS server accepts (the allowed locales global property).
+ * Returns an empty list when the session cannot be read.
+ */
+export const getAllowedLocales = async (): Promise<string[]> => {
+  try {
+    const session = await get<SessionLocaleResponse>(SESSION_URL);
+    return session?.allowedLocales ?? [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Stores the locale the user picked and switches the OpenMRS session to it, so
+ * server-side messages follow the UI. The caller reloads the page to apply it.
+ */
+export const setUserLocale = async (locale: string): Promise<void> => {
+  localStorage.setItem(EXPLICIT_LOCALE_STORAGE_KEY, locale);
+  localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  try {
+    await post(SESSION_URL, { locale });
+  } catch {
+    // The UI language still changes; only server messages stay in the old one.
+  }
 };
 
 /**

@@ -1,3 +1,4 @@
+import { getAllowedLocales } from '@bahmni/services';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -20,6 +21,8 @@ jest.mock('../actions', () => ({
 }));
 jest.mock('@bahmni/services', () => ({
   ...jest.requireActual('@bahmni/services'),
+  getAllowedLocales: jest.fn(() => Promise.resolve([])),
+  getUserPreferredLocale: jest.fn(() => 'es'),
   useTranslation: () => ({
     t: (key: string, options?: { name?: string }) =>
       options?.name ? `${key} ${options.name}` : key,
@@ -534,5 +537,21 @@ describe('UserGlobalAction', () => {
       );
       expect(container.firstChild).toMatchSnapshot();
     });
+  });
+
+  it('offers the other allowed languages in the menu, named in themselves', async () => {
+    (getAllowedLocales as jest.Mock).mockResolvedValueOnce(['en', 'es']);
+    renderWithProviders();
+
+    await userEvent.click(
+      screen.getByTestId('user-global-action-button-test-id'),
+    );
+
+    expect(
+      await screen.findByTestId('user-action-user-language-en'),
+    ).toHaveTextContent('English');
+    expect(
+      screen.queryByTestId('user-action-user-language-es'),
+    ).not.toBeInTheDocument();
   });
 });

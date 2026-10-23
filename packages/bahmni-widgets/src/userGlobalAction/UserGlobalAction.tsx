@@ -1,7 +1,9 @@
 import { Menu, MenuItem, SkeletonPlaceholder } from '@bahmni/design-system';
 import {
+  getAllowedLocales,
   getErrorKind,
   getFormattedError,
+  getUserPreferredLocale,
   hasPrivilege,
   useTranslation,
 } from '@bahmni/services';
@@ -19,6 +21,7 @@ import { useActivePractitioner } from '../activePractitioner/useActivePractition
 import { useNotification } from '../notification/useNotification';
 import { useUserPrivilege } from '../userPrivileges/useUserPrivilege';
 import { registerDefaultActions } from './actions';
+import { buildLanguageActions } from './actions/language';
 import { useUserActionRegistry } from './registry/hook';
 import styles from './styles/UserGlobalAction.module.scss';
 
@@ -69,6 +72,22 @@ export const UserGlobalAction = () => {
       hasRegistered.current = true;
     }
   }, [registry]);
+
+  // The language switcher: the locales the server allows, minus the current one.
+  // The new UI had none, so a user stuck in English could not change it here.
+  const { registerAction } = registry;
+  useEffect(() => {
+    let cancelled = false;
+    getAllowedLocales().then((allowedLocales) => {
+      if (cancelled) return;
+      buildLanguageActions(allowedLocales, getUserPreferredLocale()).forEach(
+        registerAction,
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [registerAction]);
 
   // Keyboard navigation for the dropdown. Carbon's Menu ships its own arrow-key
   // handling, but in this header trigger + portaled, fixed-position setup its
