@@ -37,6 +37,7 @@ jest.mock('@bahmni/design-system', () => ({
 jest.mock('@bahmni/services', () => ({
   renderAsHtml: jest.fn(),
   getUserPreferredLocale: jest.fn().mockReturnValue('en'),
+  getTimeFormat: jest.fn(() => 'h:mm a'),
   notificationService: { showError: jest.fn() },
   useTranslation: () => ({ t: (key: string) => key }),
   getFormattedError: jest

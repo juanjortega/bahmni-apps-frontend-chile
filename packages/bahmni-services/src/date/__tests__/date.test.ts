@@ -428,7 +428,14 @@ describe('formatDateTime locale support', () => {
     (globalThis.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
     const result = formatDateTime('2024-03-28', mockT);
-    expect(result.formattedResult).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+    // The browser's own format: dd/MM/yyyy in en-GB, dd-MM-yyyy in es-CL...
+    expect(result.formattedResult).toBe(
+      new Intl.DateTimeFormat(undefined, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(new Date(2024, 2, 28)),
+    );
     expect(result.error).toBeUndefined();
   });
 

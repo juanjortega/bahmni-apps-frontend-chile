@@ -12,7 +12,10 @@ import {
   subMonths,
   subDays,
   format,
+  type Locale,
 } from 'date-fns';
+import { enUS, es, fr, ptBR } from 'date-fns/locale';
+import { getUserPreferredLocale } from '../i18n/translationService';
 import { Age } from '../patientService/models';
 import {
   DEFAULT_DATE_FORMAT,
@@ -20,6 +23,55 @@ import {
   DEFAULT_TIME_FORMAT,
 } from './constants';
 import { DATE_ERROR_MESSAGES } from './errors';
+
+const DATE_FNS_LOCALES: Record<string, Locale> = {
+  en: enUS,
+  es,
+  fr,
+  pt: ptBR,
+};
+
+// "es-CL" / "pt_BR" -> "es" / "pt". The UI stores bare codes, but be lenient.
+const baseLanguage = (locale: unknown): string | undefined =>
+  typeof locale === 'string' && locale
+    ? locale.split(/[-_]/)[0].toLowerCase()
+    : undefined;
+
+/**
+ * date-fns locale for the UI language, so month and day names follow it
+ * ("23 oct 2026" in Spanish). Unknown languages keep date-fns' default (English).
+ */
+export function getDateFnsLocale(
+  locale: string = getUserPreferredLocale(),
+): Locale | undefined {
+  const language = baseLanguage(locale);
+  return language ? DATE_FNS_LOCALES[language] : undefined;
+}
+
+/**
+ * Time format for the UI language: 24 h ("HH:mm") where the language uses it,
+ * as Spanish does, and 12 h ("h:mm a", DEFAULT_TIME_FORMAT) otherwise. It looks
+ * at the language only: ICU gives es-CL a 12 h clock, but the clinic uses 24 h.
+ */
+export function getTimeFormat(
+  locale: string = getUserPreferredLocale(),
+): string {
+  const language = baseLanguage(locale);
+  if (!language) return DEFAULT_TIME_FORMAT;
+  try {
+    const { hourCycle, hour12 } = new Intl.DateTimeFormat(language, {
+      hour: 'numeric',
+    }).resolvedOptions() as Intl.ResolvedDateTimeFormatOptions & {
+      hourCycle?: string;
+    };
+    if (hour12 === false || hourCycle === 'h23' || hourCycle === 'h24') {
+      return 'HH:mm';
+    }
+  } catch {
+    // Malformed locale: keep the default.
+  }
+  return DEFAULT_TIME_FORMAT;
+}
 
 export interface FormatDateResult {
   formattedResult: string;
@@ -169,7 +221,11 @@ function formatDateGeneric(
     };
   }
 
-  return { formattedResult: format(dateToFormat, dateFormat) };
+  return {
+    formattedResult: format(dateToFormat, dateFormat, {
+      locale: getDateFnsLocale(),
+    }),
+  };
 }
 
 /**
@@ -242,7 +298,7 @@ export function formatDateTime(
   }
 
   if (includeTime && !dateFormat) {
-    finalFormat = `${finalFormat} ${DEFAULT_TIME_FORMAT}`;
+    finalFormat = `${finalFormat} ${getTimeFormat()}`;
   }
 
   return formatDateGeneric(date, finalFormat, translationFn);

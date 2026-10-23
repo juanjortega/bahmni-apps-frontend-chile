@@ -7,7 +7,7 @@ import {
   Tabs,
 } from '@bahmni/design-system';
 import {
-  DEFAULT_TIME_FORMAT,
+  getTimeFormat,
   formatDateTime,
   useTranslation,
 } from '@bahmni/services';
@@ -99,15 +99,11 @@ const AppointmentsTable: React.FC<WidgetProps> = ({ config }) => {
             row.appointmentStartTime,
             t,
             false,
-            DEFAULT_TIME_FORMAT,
+            getTimeFormat(),
           ).formattedResult;
           const endTime = row.appointmentEndTime
-            ? formatDateTime(
-                row.appointmentEndTime,
-                t,
-                false,
-                DEFAULT_TIME_FORMAT,
-              ).formattedResult
+            ? formatDateTime(row.appointmentEndTime, t, false, getTimeFormat())
+                .formattedResult
             : startTime;
           return `${startTime} - ${endTime}`;
         }

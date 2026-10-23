@@ -150,6 +150,8 @@ export {
   calculateAge,
   computeAgeDetails,
   formatDateTime,
+  getTimeFormat,
+  getDateFnsLocale,
   formatDateDistance,
   calculateOnsetDate,
   sortByDate,

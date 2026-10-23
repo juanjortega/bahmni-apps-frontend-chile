@@ -1,7 +1,7 @@
 import {
   AuditEventType,
   camelToScreamingSnakeCase,
-  DEFAULT_TIME_FORMAT,
+  getTimeFormat,
   formatCountry,
   formatDateTime,
   formatGender,
@@ -71,7 +71,7 @@ export const resultTransforms: Record<string, ResultTransform> = {
   [TRANSFORM_KEYS.formatDate]: (value: unknown, t: (key: string) => string) =>
     formatDateTime(value as DateTimeValue, t).formattedResult,
   [TRANSFORM_KEYS.formatTime]: (value: unknown, t: (key: string) => string) =>
-    formatDateTime(value as DateTimeValue, t, false, DEFAULT_TIME_FORMAT)
+    formatDateTime(value as DateTimeValue, t, false, getTimeFormat())
       .formattedResult,
   [TRANSFORM_KEYS.formatDateTime]: (
     value: unknown,

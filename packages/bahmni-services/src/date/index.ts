@@ -6,6 +6,8 @@ export {
   addMinutesToTime,
   computeAgeDetails,
   formatDateTime,
+  getTimeFormat,
+  getDateFnsLocale,
   formatDateDistance,
   calculateOnsetDate,
   sortByDate,

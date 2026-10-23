@@ -7,7 +7,7 @@ const DEFAULT_TIME_FORMAT = 'h:mm a';
 jest.mock('@bahmni/services', () => ({
   getRecentVisitEncounters: jest.fn(),
   formatDateTime: jest.fn(),
-  DEFAULT_TIME_FORMAT: 'h:mm a',
+  getTimeFormat: jest.fn(() => 'h:mm a'),
 }));
 
 const mockGetRecent = getRecentVisitEncounters as jest.Mock;

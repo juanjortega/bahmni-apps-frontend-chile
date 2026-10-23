@@ -1,5 +1,5 @@
 import {
-  DEFAULT_TIME_FORMAT,
+  getTimeFormat,
   formatDateTime,
   getRecentVisitEncounters,
   type EncounterWithVisit,
@@ -7,7 +7,8 @@ import {
 import type { Encounter } from 'fhir/r4';
 import type { CategoryPicker } from './types';
 
-const ENCOUNTER_DATE_TIME_FORMAT = `dd-MMM-yyyy ${DEFAULT_TIME_FORMAT}`;
+// Function, not constant: the UI locale is not known yet when this module loads.
+const getEncounterDateTimeFormat = () => `dd-MMM-yyyy ${getTimeFormat()}`;
 const RECENT_VISITS_COUNT = 2;
 
 function encounterLabel(encounter: Encounter): string {
@@ -37,7 +38,7 @@ export const prescriptionEncounterPicker: CategoryPicker<EncounterWithVisit> = {
     const start = encounter.period?.start;
     const providerName = encounter.participant?.[0]?.individual?.display;
     const dateTime = start
-      ? formatDateTime(start, t, true, ENCOUNTER_DATE_TIME_FORMAT)
+      ? formatDateTime(start, t, true, getEncounterDateTimeFormat())
           .formattedResult
       : '';
     return {
