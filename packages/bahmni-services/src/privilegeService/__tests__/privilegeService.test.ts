@@ -113,6 +113,62 @@ describe('privilegeService', () => {
     });
   });
 
+  describe('getCurrentUserPrivileges for a superuser', () => {
+    const superUserSession = {
+      user: { privileges: [], roles: [{ display: 'System Developer' }] },
+    };
+
+    it('returns every privilege on the server, following the pages', async () => {
+      mockedGet
+        .mockResolvedValueOnce(superUserSession)
+        .mockResolvedValueOnce({
+          results: [{ uuid: '1', name: 'Add Allergies' }],
+          links: [{ rel: 'next' }],
+        })
+        .mockResolvedValueOnce({
+          results: [{ uuid: '2', name: 'app:clinical' }],
+          links: [{ rel: 'prev' }],
+        });
+
+      const result = await getCurrentUserPrivileges();
+
+      expect(result?.map((p) => p.name)).toEqual([
+        'Add Allergies',
+        'app:clinical',
+      ]);
+      expect(mockedGet).toHaveBeenNthCalledWith(
+        2,
+        '/openmrs/ws/rest/v1/privilege?v=custom:(uuid,name)&limit=500&startIndex=0',
+      );
+      expect(mockedGet).toHaveBeenNthCalledWith(
+        3,
+        '/openmrs/ws/rest/v1/privilege?v=custom:(uuid,name)&limit=500&startIndex=500',
+      );
+    });
+
+    it('falls back to the session privileges when the listing fails', async () => {
+      mockedGet
+        .mockResolvedValueOnce(superUserSession)
+        .mockRejectedValueOnce(new Error('403'));
+
+      await expect(getCurrentUserPrivileges()).resolves.toEqual([]);
+    });
+
+    it('does not list the server privileges for other roles', async () => {
+      mockedGet.mockResolvedValueOnce({
+        user: {
+          privileges: [{ name: 'app:clinical' }],
+          roles: [{ name: 'Doctor' }],
+        },
+      });
+
+      await expect(getCurrentUserPrivileges()).resolves.toEqual([
+        { name: 'app:clinical' },
+      ]);
+      expect(mockedGet).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('hasPrivilege', () => {
     const mockUserPrivileges: UserPrivilege[] = [
       { uuid: '1', name: 'app:clinical:observationForms' },

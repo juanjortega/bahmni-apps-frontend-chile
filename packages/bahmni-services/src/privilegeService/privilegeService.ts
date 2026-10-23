@@ -1,10 +1,45 @@
 import { get } from '../api';
-import { SESSION_URL } from '../constants/app';
+import { OPENMRS_REST_V1, SESSION_URL } from '../constants/app';
 import { getFormattedError } from '../errorHandling';
 import { UserPrivilege, SessionResponse } from './models';
 
+// OpenMRS RoleConstants.SUPERUSER: the backend grants this role every
+// privilege, yet /session lists none for it, so the UI hid every tile.
+export const SUPERUSER_ROLE = 'System Developer';
+const PRIVILEGE_URL = OPENMRS_REST_V1 + '/privilege';
+// The server caps a page at 1000 (absolute limit) and defaults to 50.
+const PRIVILEGE_PAGE_SIZE = 500;
+
+interface PrivilegePage {
+  results?: UserPrivilege[];
+  links?: { rel: string }[];
+}
+
+const isSuperUser = (session: SessionResponse): boolean =>
+  !!session.user?.roles?.some(
+    (role) => (role.name ?? role.display) === SUPERUSER_ROLE,
+  );
+
 /**
- * Fetches current user privileges from session API
+ * Every privilege defined on the server, page by page: what a superuser holds.
+ */
+const getAllPrivileges = async (): Promise<UserPrivilege[]> => {
+  const privileges: UserPrivilege[] = [];
+  for (let startIndex = 0; ; startIndex += PRIVILEGE_PAGE_SIZE) {
+    const page = await get<PrivilegePage>(
+      `${PRIVILEGE_URL}?v=custom:(uuid,name)&limit=${PRIVILEGE_PAGE_SIZE}&startIndex=${startIndex}`,
+    );
+    privileges.push(...(page.results ?? []));
+    if (!page.links?.some((link) => link.rel === 'next')) {
+      return privileges;
+    }
+  }
+};
+
+/**
+ * Fetches current user privileges from session API. A superuser (System
+ * Developer role) gets every privilege defined on the server, as the backend
+ * treats it.
  * @returns Promise that resolves to array of user privileges or null if failed
  * @throws Error if fetch fails
  */
@@ -16,6 +51,14 @@ export const getCurrentUserPrivileges = async (): Promise<
 
     if (!session.user) {
       return null;
+    }
+
+    if (isSuperUser(session)) {
+      try {
+        return await getAllPrivileges();
+      } catch {
+        // Fall back to what the session lists; better than failing the app.
+      }
     }
 
     return session.user.privileges;

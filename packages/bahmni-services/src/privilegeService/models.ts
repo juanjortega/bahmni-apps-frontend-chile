@@ -16,6 +16,7 @@ export interface UserPrivilege {
 export interface SessionResponse {
   user?: {
     privileges: UserPrivilege[];
+    roles?: { uuid?: string; name?: string; display?: string }[];
     username?: string;
   } | null;
 }
