@@ -276,6 +276,8 @@
   "FORM_RECORDED_ON": "Grabado el",
   "GENDER_F": "Femenino",
   "GENDER_M": "Masculino",
+  "GENDER_O": "Otro",
+  "GENDER_U": "Desconocido",
   "GLOBAL_ACTION_NOTIFICATIONS": "Notificaciones",
   "GLOBAL_ACTION_SEARCH": "Buscar",
   "GLOBAL_ACTION_USER": "Usuario",

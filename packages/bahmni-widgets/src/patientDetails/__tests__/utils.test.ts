@@ -77,4 +77,29 @@ describe('createPatientDetailsViewModel', () => {
 
     expect(result.ageDetails).toBe('35YEARS 2MONTHS 15DAYS');
   });
+
+  it('translates the FHIR gender with the GENDER_<initial> keys', () => {
+    const translations: Record<string, string> = {
+      GENDER_F: 'Femenino',
+      GENDER_M: 'Masculino',
+    };
+    const tEs = (key: string) => translations[key] ?? key;
+
+    expect(
+      createPatientDetailsViewModel(
+        { ...mockFullPatient, gender: 'female' },
+        tEs,
+      ).gender,
+    ).toBe('Femenino');
+    expect(
+      createPatientDetailsViewModel({ ...mockFullPatient, gender: 'male' }, tEs)
+        .gender,
+    ).toBe('Masculino');
+    expect(
+      createPatientDetailsViewModel(
+        { ...mockFullPatient, gender: 'other' },
+        tEs,
+      ).gender,
+    ).toBe('other');
+  });
 });
