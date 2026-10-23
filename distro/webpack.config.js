@@ -2,13 +2,29 @@ const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { InjectManifest } = require('workbox-webpack-plugin');
 const webpack = require('webpack');
-const { join } = require('path');
+const { join, resolve } = require('path');
 
 module.exports = (env, argv) => {
   //TODO to read this from docker compose
   //TODO should we hardcode?
   const publicPath = env.PUBLIC_PATH || process.env.PUBLIC_PATH || '/bahmni-v2/';
   const isDevelopment = argv.mode !== 'production';
+  // Desarrollo contra un Bahmni que no está en https://localhost (p. ej. el lab FHIR por túnel ssh,
+  // BAHMNI_TARGET=http://127.0.0.1:18080/) y con la config del centro desde una carpeta local
+  // (BAHMNI_CONFIG_DIR=<carpeta que contiene openmrs/>), servida en /bahmni_config.
+  const bahmniTarget = process.env.BAHMNI_TARGET || 'https://localhost/';
+  // resolve: en Windows "C:/..." parece una URL para webpack-dev-server; "C:\..." no.
+  const bahmniConfigDir = process.env.BAHMNI_CONFIG_DIR && resolve(process.env.BAHMNI_CONFIG_DIR);
+  // Sesión de OpenMRS fija para el proxy (BAHMNI_DEV_JSESSIONID): reemplaza el JSESSIONID del navegador,
+  // que es HttpOnly y no se puede pisar desde la consola, y sirve para pruebas automáticas sin login.
+  const devSessionId = process.env.BAHMNI_DEV_JSESSIONID;
+  const withDevSession = (proxyReq) => {
+    const others = (proxyReq.getHeader('cookie') || '')
+      .split(';')
+      .map((c) => c.trim())
+      .filter((c) => c && !c.startsWith('JSESSIONID='));
+    proxyReq.setHeader('cookie', [...others, `JSESSIONID=${devSessionId}`].join('; '));
+  };
 
   return {
     output: {
@@ -35,10 +51,19 @@ module.exports = (env, argv) => {
         disableDotRule: true,
         htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
       },
+      static: bahmniConfigDir
+        ? [{ directory: bahmniConfigDir, publicPath: '/bahmni_config', watch: true }]
+        : false,
       proxy: [
         {
-          context: (pathname) => !pathname.startsWith(publicPath),
-          target: 'https://localhost/',
+          context: (pathname) =>
+            !pathname.startsWith(publicPath) &&
+            !(bahmniConfigDir && pathname.startsWith('/bahmni_config/')),
+          target: bahmniTarget,
+          // webpack-dev-server 5 trae http-proxy-middleware 2 (onProxyReq); el 3 usa on.proxyReq.
+          ...(devSessionId
+            ? { onProxyReq: withDevSession, on: { proxyReq: withDevSession } }
+            : {}),
           changeOrigin: true,
           secure: false,
           logLevel: 'debug',
