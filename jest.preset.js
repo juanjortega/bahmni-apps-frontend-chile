@@ -1,5 +1,9 @@
 const nxPreset = require('@nx/jest/preset').default;
 
+// Las pruebas de fechas y edades asumen UTC (como el CI). En una máquina con otra zona horaria
+// (p. ej. America/Santiago) fallaban; los workers de jest heredan esta variable.
+process.env.TZ = process.env.JEST_TZ || 'UTC';
+
 module.exports = {
   ...nxPreset,
   testEnvironment: 'jsdom',

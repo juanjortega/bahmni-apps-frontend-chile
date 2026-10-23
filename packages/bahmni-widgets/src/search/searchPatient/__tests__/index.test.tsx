@@ -669,7 +669,15 @@ describe('SearchPatient', () => {
 
       const dateInput = screen.getByTestId('advance-search-date-input');
       expect(dateInput).toBeInTheDocument();
-      expect(dateInput).toHaveValue(format(new Date(), 'MM/dd/yyyy'));
+      // El DatePicker usa el formato de fecha del navegador (dd-MM-yyyy en es-CL,
+      // MM/dd/yyyy en en-US), no uno fijo.
+      expect(dateInput).toHaveValue(
+        new Intl.DateTimeFormat(undefined, {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        }).format(new Date()),
+      );
       expect(
         screen.queryByTestId('advance-search-input'),
       ).not.toBeInTheDocument();
