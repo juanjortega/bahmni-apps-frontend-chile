@@ -2665,17 +2665,17 @@
     "@jsonjoy.com/buffers" "^1.0.0"
     "@jsonjoy.com/codegen" "^1.0.0"
 
-"@juanjortega/bahmni-clinical-ui@0.10.0":
-  version "0.10.0"
-  resolved "https://npm.pkg.github.com/download/@juanjortega/bahmni-clinical-ui/0.10.0/4abbfc82c7cdd58baf4bcc5e0eccd22ffad2cfcd#4abbfc82c7cdd58baf4bcc5e0eccd22ffad2cfcd"
-  integrity sha512-dV84NTT7ur9rPAPq7npecxhrteD29ZEh1eSBPREN2kas7uL5YKb8dAUUlLW2e2cblIrYdF47YW+yNWMWs9PxZg==
+"@juanjortega/bahmni-clinical-ui@0.11.1":
+  version "0.11.1"
+  resolved "https://npm.pkg.github.com/download/@juanjortega/bahmni-clinical-ui/0.11.1/5fefdcea0ec27fc36dd4588e7f80847c471ff783#5fefdcea0ec27fc36dd4588e7f80847c471ff783"
+  integrity sha512-oR3MvxrTTVLqpdqo/yK2ijqxhtLVpj75eQm4R0s47HtIQEYrA30r7O29J6NmPIGk7ac+4X8qjtykf8FYO/2F7w==
   dependencies:
-    "@juanjortega/bahmni-clinical" "^0.12.0"
+    "@juanjortega/bahmni-clinical" "^0.12.2"
 
-"@juanjortega/bahmni-clinical@^0.12.0":
-  version "0.12.0"
-  resolved "https://npm.pkg.github.com/download/@juanjortega/bahmni-clinical/0.12.0/037f386b1523ed29bd74c056cd25d2ef7048357b#037f386b1523ed29bd74c056cd25d2ef7048357b"
-  integrity sha512-J4zuPaslYJgXDiY6eoYasUZ+zgACVrkx6COCoJgv/zpm238GzJrkU40s1QLYjWH0jmWHR9mdb1JkwC7BWTUMPg==
+"@juanjortega/bahmni-clinical@^0.12.2":
+  version "0.12.2"
+  resolved "https://npm.pkg.github.com/download/@juanjortega/bahmni-clinical/0.12.2/2c7aee261cf85ae07ab8c886ccd592d36e45ff86#2c7aee261cf85ae07ab8c886ccd592d36e45ff86"
+  integrity sha512-qYXta4ieoZfANI1saywgV5YuYdnV8+U86u6qtR4sW8Nn8ecMcYddT8eVCLB5yMPG1mzoWM/0304JON4YDtocLw==
 
 "@leichtgewicht/ip-codec@^2.0.1":
   version "2.0.5"

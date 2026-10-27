@@ -17,8 +17,7 @@ import {
   type WidgetConfig,
 } from '@bahmni/widgets';
 import { lazy, type ComponentProps } from 'react';
-// Estilos de los widgets y tokens tomados de Carbon solo dentro de `.bcui-widget` (no cambian el resto).
-import '@juanjortega/bahmni-clinical-ui/widgets.css';
+// Estilos de los widgets, sin capa, y tokens tomados de Carbon, solo dentro de `.bcui-widget` (no cambian el resto).
 import '@juanjortega/bahmni-clinical-ui/widgets-host.css';
 
 /** `WidgetProps` no es público en `@bahmni/widgets`: se toma del tipo del componente registrado. */
