@@ -25,7 +25,7 @@ Prioridad: **1** lo usa el personal todos los días, **2** importante, **3** des
 | Errores HTTP por idioma, sin la excepción Java en los 500 | 602f288a5 | portar | 2 | 400/409 conservan el mensaje del servidor |
 | «No tienes aplicaciones» en vez de pantalla en blanco | 6a602d48d | existe | — | React muestra «No hay módulos disponibles» |
 | Logout encadenado OpenMRS → oauth2-proxy → Keycloak; adoptar sesión del borde | d7df5c60d, 78ee7956f, 12ddea673, 3bb38ad5d | portar | 1 | React hace `DELETE /session` y vuelve al login legacy; bajo SSO debe ir a `/bahmni/logout.html` |
-| Títulos de pestaña por clave, sin marca | 26e24c8f1, e413d7a8c, 1c2e9be40… | portar | 3 | |
+| Títulos de pestaña por clave, sin marca | 26e24c8f1, e413d7a8c, 1c2e9be40… | portar | 3 | encajaría como acción de paciente (ADR-020) |
 | Capa es-CL de traducciones (config) | cfg-cl 7a0d2ed… (≈30) | config | 1 | muchas claves coinciden; hay que revisar `openmrs/i18n/<app>/locale_es.json` para los namespaces v2 |
 | Superusuario («System Developer») ve las apps | — (fallo propio de React) | pendiente de decisión | 1 | `/session` no lista privilegios del superusuario y React lo deja sin nada; ver preguntas |
 
@@ -45,14 +45,14 @@ Prioridad: **1** lo usa el personal todos los días, **2** importante, **3** des
 
 | mejora | commits | estado | prio | notas |
 |---|---|---|---|---|
-| **Tablero de órdenes**: todas las órdenes y formularios, PDF y envío por correo | 278cd8094 … 6e93ff1a4 | portar | 1 | ya es React (`micro-frontends/.../AllOrders`); se registra como widget `allOrders` |
+| **Tablero de órdenes**: todas las órdenes y formularios, PDF y envío por correo | 278cd8094 … 6e93ff1a4 | **hecho** (receta y órdenes) | 1 | widget `clinicalDocuments` de `@juanjortega/bahmni-clinical-ui` (ADR-020): PDF por sección y emisor con firma, imprimir, guardar en la ficha y avisar por correo. Los formularios del tablero de órdenes siguen pendientes |
 | Documentos entregados (PDF guardado en la ficha antes del aviso) y huella sha256 | 19475c813 … 3f86f0ef2 | portar | 1 | va con el tablero de órdenes |
 | **Firma del profesional**: «Mi firma», «Administrar firmas» y estampado en los PDF | e2c4cfab0, 4a055ee96, c7d4424be | portar | 1 | backend `/ws/rest/v1/provider-signature` (omod `provider-signature`, está en el lab) |
-| **Tendencias** (gráficos de observaciones, conceptos por uuid) | 69bc2d608, 8a6490a7c, 70adf63dc, 1596c1daf, 24f57bdcc, ba0eef803 | portar | 1 | React no tiene gráficos; `@carbon/charts-react` encaja con Carbon |
-| **Curvas de crecimiento** OMS/norma chilena (4 curvas, eje no-edad) | dc05af208, 178195fd8, 44564e737, 0124fdf17 | portar | 2 | CSV de referencia en la config |
+| **Tendencias** (gráficos de observaciones, conceptos por uuid) | 69bc2d608, 8a6490a7c, 70adf63dc, 1596c1daf, 24f57bdcc, ba0eef803 | **hecho** | 1 | widget `observationCurves` (ADR-020): mismas claves que `observationGraph`, uuids, SVG propio sin librería |
+| **Curvas de crecimiento** OMS/norma chilena (4 curvas, eje no-edad) | dc05af208, 178195fd8, 44564e737, 0124fdf17 | **hecho** | 2 | mismo widget, con `referenceData` (los CSV del clásico) y eje por concepto (peso/talla) |
 | Alergias: severidad y reacciones traducidas | c9d5ce5db, e9997ce72 | revisar | 1 | |
 | Condiciones: «Antecedente(s)» | eca2da4bd | config | 2 | |
-| Interconsulta (TEI): pendientes, detalle y «Finalizar y responder» | 6d6762c56 … 7956a9860 | portar | 2 | ya es React; widget `interconsultaFinalize` |
+| Interconsulta (TEI): pendientes, detalle y «Finalizar y responder» | 6d6762c56 … 7956a9860 | **hecho** | 2 | widget `interconsultaRed` (ADR-020) |
 | Teleconsulta: ventana de video arrastrable con Jitsi | 602f43ca7 … 974b7ea49 | portar | 3 | |
 | Impresión del tablero | a1a09eb62 … 6b5504d5d | revisar | 2 | React imprime por plantillas del servidor |
 | Formularios 2.0 en castellano (decimal, «Seleccione…») | 3c2d02c08, 52d707feb… | revisar | 2 | corregir en `@bahmni/form2-controls`, no con parche |
