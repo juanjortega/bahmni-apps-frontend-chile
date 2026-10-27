@@ -55,7 +55,8 @@ Se usan como cualquier control de una sección.
   - El paquete está en GitHub Packages; el `.npmrc` del repo solo dice el registro del scope.
   - El token va en el `~/.npmrc` de cada uno (`//npm.pkg.github.com/:_authToken=…`, con `read:packages`). No va en el repo: yarn 1 falla en todo comando si una variable del `.npmrc` no existe.
   - En CI: `actions/setup-node` con `registry-url: https://npm.pkg.github.com`, `scope: "@juanjortega"` y `NODE_AUTH_TOKEN`. Además, hay que darle al paquete acceso de lectura para este repositorio.
+- `yarn.lock` ya tiene `bahmni-clinical-ui` 0.10.0 y `bahmni-clinical` 0.12.0, publicados el 27-10-2026.
+- Build local: `nx build distro` necesita `NODE_OPTIONS=--max-old-space-size=8192`. Sin eso, webpack se queda sin memoria y termina sin mensaje.
 - **Pendiente:**
-  - Actualizar `yarn.lock` cuando se publique `bahmni-clinical-ui` 0.10.0 (etiqueta `bahmni-clinical-ui-v0.10.0` en `urgencia-bahmni`).
   - Adaptar el workflow de imagen: publicar en `ghcr.io/juanjortega/bahmni-apps-frontend-chile`, con etiquetas fijas.
   - Reemplazar la imagen de serie en el .115. Eso requiere un OK de despliegue aparte.
