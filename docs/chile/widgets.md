@@ -57,6 +57,10 @@ Se usan como cualquier control de una sección.
   - En CI: `actions/setup-node` con `registry-url: https://npm.pkg.github.com`, `scope: "@juanjortega"` y `NODE_AUTH_TOKEN`. Además, hay que darle al paquete acceso de lectura para este repositorio.
 - `yarn.lock` ya tiene `bahmni-clinical-ui` 0.11.1 y `bahmni-clinical` 0.12.2, publicados el 27-10-2026.
 - Build local: `nx build distro` necesita `NODE_OPTIONS=--max-old-space-size=8192`. Sin eso, webpack se queda sin memoria y termina sin mensaje.
-- **Pendiente:**
-  - Adaptar el workflow de imagen: publicar en `ghcr.io/juanjortega/bahmni-apps-frontend-chile`, con etiquetas fijas.
-  - Reemplazar la imagen de serie en el .115. Eso requiere un OK de despliegue aparte.
+- **Imagen:** `ghcr.io/juanjortega/bahmni-apps-frontend-chile`, con etiquetas fijas, nunca `latest`.
+  - Primera: `1.1.0-chile.1` (y `sha-1c22526c8caf`), del commit `1c22526c`, publicada el 28-10-2026.
+  - Se construye en un servidor de desarrollo, no en el PC, con `scripts/chile/build-imagen.sh`: `gh auth token | ssh <servidor> 'sh -s <commit> <etiqueta>' < scripts/chile/build-imagen.sh`.
+  - El script trabaja en `~/build/bahmni-apps-frontend-chile`, usa un contenedor `node:22` con tope de 6 GB y una config de Docker propia, y borra el token al terminar.
+  - No usa los workflows heredados de Bahmni: publican en su Docker Hub, y el `GITHUB_TOKEN` de este repo no lee los paquetes `@juanjortega`.
+  - El paquete de ghcr quedó **privado**. Para bajarlo, el servidor necesita un login con `read:packages`, o hay que hacer público el paquete; eso lo decide Juanjo.
+- **Pendiente:** reemplazar la imagen de serie en el .115 (`docker-compose.apps-frontend.yml`). Requiere un OK de despliegue aparte.
