@@ -1,8 +1,11 @@
 #!/bin/sh
 # Construye y publica la imagen del fork chileno del frontend nuevo de Bahmni en un servidor de desarrollo, en su propia
-# carpeta (~/build/bahmni-apps-frontend-chile), sin tocar lo que corre. Se corre desde el PC:
+# carpeta (~/build/bahmni-apps-frontend-chile), sin tocar lo que corre. Se corre desde el PC, en Windows PowerShell 5.1
+# y desde cualquier carpeta (una sola línea; <servidor> es el alias de ~/.ssh/config, p. ej. bahmni-115):
 #
-#   gh auth token | ssh <servidor> 'sh -s <commit> <etiqueta>' < scripts/chile/build-imagen.sh
+#   & 'C:\Program Files\Git\bin\bash.exe' -c 'cd /c/Users/juanj/GitHub/juanjortega/bahmni-chile/bahmni-apps-frontend-chile && scp -q scripts/chile/build-imagen.sh <servidor>:build-imagen.sh && gh auth token | ssh <servidor> ''sh build-imagen.sh <commit> <etiqueta>; r=$?; rm -f build-imagen.sh; exit $r'''
+#
+# El script se copia y se corre como archivo para que stdin quede libre para el token.
 #
 # El token (read:packages para @juanjortega, write:packages para ghcr) llega por stdin. Se usa solo durante el build,
 # en archivos 600 dentro de la carpeta (un .npmrc y una config de Docker propia, sin tocar el login del servidor), y se

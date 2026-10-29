@@ -59,8 +59,9 @@ Se usan como cualquier control de una sección.
 - Build local: `nx build distro` necesita `NODE_OPTIONS=--max-old-space-size=8192`. Sin eso, webpack se queda sin memoria y termina sin mensaje.
 - **Imagen:** `ghcr.io/juanjortega/bahmni-apps-frontend-chile`, con etiquetas fijas, nunca `latest`.
   - Primera: `1.1.0-chile.1` (y `sha-1c22526c8caf`), del commit `1c22526c`, publicada el 28-10-2026.
-  - Se construye en un servidor de desarrollo, no en el PC, con `scripts/chile/build-imagen.sh`: `gh auth token | ssh <servidor> 'sh -s <commit> <etiqueta>' < scripts/chile/build-imagen.sh`.
+  - Se construye en un servidor de desarrollo, no en el PC, con `scripts/chile/build-imagen.sh`. La línea para pegar en PowerShell 5.1 está en la cabecera del script.
   - El script trabaja en `~/build/bahmni-apps-frontend-chile`, usa un contenedor `node:22` con tope de 6 GB y una config de Docker propia, y borra el token al terminar.
   - No usa los workflows heredados de Bahmni: publican en su Docker Hub, y el `GITHUB_TOKEN` de este repo no lee los paquetes `@juanjortega`.
-  - El paquete de ghcr quedó **privado**. Para bajarlo, el servidor necesita un login con `read:packages`, o hay que hacer público el paquete; eso lo decide Juanjo.
-- **Pendiente:** reemplazar la imagen de serie en el .115 (`docker-compose.apps-frontend.yml`). Requiere un OK de despliegue aparte.
+  - El paquete de ghcr quedó **privado**. No hace falta bajarlo: la imagen se construye en el mismo servidor donde corre, y compose usa la imagen local.
+- **Desplegada en el .115** el 28-10-2026: `docker-compose.apps-frontend.yml` usa `1.1.0-chile.1`. Para volver a la de serie, poner `bahmni/bahmni-apps-frontend:1.0.0`.
+- **Pendiente:** agregar los controles a los tableros v2 del centro (`general.json` y `program.json`), que vienen en la imagen de configuración.
