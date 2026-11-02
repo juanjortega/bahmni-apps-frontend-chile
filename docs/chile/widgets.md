@@ -65,6 +65,5 @@ Se usan como cualquier control de una sección.
   - El paquete de ghcr quedó **privado**. No hace falta bajarlo: la imagen se construye en el mismo servidor donde corre, y compose usa la imagen local.
 - **Desplegada en el .115** el 28-10-2026: `docker-compose.apps-frontend.yml` usa `1.1.0-chile.1`. Para volver a la de serie, poner `bahmni/bahmni-apps-frontend:1.0.0`.
 - **Tableros del .115** (28-10-2026): el tablero general del clínico v2 tiene las secciones «Curvas» (las curvas de «Tendencias» del clásico), «Recetas e indicaciones» e «Interconsulta de la red».
-  - Vienen en la imagen de configuración del centro, construida a mano porque Actions no corría. Esa imagen solo existe en el servidor.
-  - El cambio de configuración debe integrarse a la rama de publicación del repo de configuración antes de su próximo build automático; si no, ese build trae el tablero sin los widgets.
+  - Vienen en la configuración del centro. El cambio ya está en su rama de publicación (a31ab26) y viaja en sus imágenes desde 1.1.0-52-widgets; la 1.1.0-60, que corre en el .115 (01-11-2026), lo trae.
   - El tablero de programas no se tocó.
