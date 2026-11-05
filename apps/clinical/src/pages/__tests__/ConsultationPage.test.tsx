@@ -1081,4 +1081,59 @@ describe('ConsultationPage', () => {
       );
     });
   });
+
+  describe('Distribución chilena: el paciente no cambia con una consulta abierta', () => {
+    it('no ofrece la búsqueda de pacientes en la barra', async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('mocked-header-component'),
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('global-action-search'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('cierra la consulta al cambiar de paciente, sin abrirla para el otro', async () => {
+      (getFormattedPatientById as jest.Mock).mockResolvedValue({
+        fullName: 'John Doe',
+      });
+      (usePatientUUID as jest.Mock).mockReturnValue('patient-a');
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      const ui = () => (
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/consultation']}>
+            <ConsultationPage />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+      const { rerender } = render(ui());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('mocked-consultation-pad'),
+        ).toBeInTheDocument();
+      });
+
+      (usePatientUUID as jest.Mock).mockReturnValue('patient-b');
+      rerender(ui());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('mocked-consultation-pad'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

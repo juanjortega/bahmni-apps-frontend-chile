@@ -71,9 +71,9 @@ Prioridad: **1** lo usa el personal todos los días, **2** importante, **3** des
 
 ## Bloqueos de backend en el 115 (no son de la GUI)
 
-- El 115 no tiene FHIR **EncounterBundle**, que es con lo que esta GUI guarda las consultas. Tampoco
-  tiene **Appointment**, y su **Condition** rechaza `category` y `clinical-status`. El laboratorio
-  FHIR (fhir2 2.5.1, fhir2Extension, fhir2addlextension, episodes 2.0.0) sí los tiene.
+- **Actualizado el 04-11-2026:** el 115 ya publica FHIR **EncounterBundle** y **Appointment** (fhir2 2.5.1,
+  fhir2addlextension 1.0.0), pero guardar por EncounterBundle solo se probó en el laboratorio FHIR. Falta volver a
+  revisar si el 115 sigue rechazando `category` y `clinical-status` en **Condition**.
 - `GET /openmrs/ws/rest/v1/bahmni/app/setting?module=commons` da 404 en el laboratorio. React cae al
   formato de fecha del navegador.
 - `Immunization` con `status`/`_sort` da 400 en el laboratorio.

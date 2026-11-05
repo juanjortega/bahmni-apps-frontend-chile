@@ -12,12 +12,6 @@ exports[`ConsultationPage Snapshot should match the snapshot 1`] = `
       <div
         data-testid="mocked-header-component"
       >
-        <button
-          data-testid="global-action-search"
-          tabindex="0"
-        >
-          Search
-        </button>
         <div
           data-testid="user-global-action"
         />

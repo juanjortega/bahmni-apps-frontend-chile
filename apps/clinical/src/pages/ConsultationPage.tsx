@@ -1,8 +1,6 @@
 import {
   Loading,
-  Icon,
   Header,
-  ICON_SIZE,
   useSidebarNavigation,
   ActionAreaLayout,
 } from '@bahmni/design-system';
@@ -35,7 +33,6 @@ import { useSearchParams } from 'react-router-dom';
 import ConsultationPadContainer from '../components/consultationPadContainer';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
 import PatientHeader from '../components/patientHeader/PatientHeader';
-import PatientSearch from '../components/patientSearch/PatientSearch';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
 import type { EncounterSessionStartContext } from '../events/startConsultation';
 import { useSubscribeConsultationStart } from '../events/startConsultation';
@@ -95,25 +92,8 @@ const ConsultationPage: React.FC = () => {
       setIsActionAreaExpanded(false);
     }, []),
   );
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchParams] = useSearchParams();
 
-  const handleSearchOpen = useCallback(() => setIsSearchOpen(true), []);
-  const handleSearchClose = useCallback(() => setIsSearchOpen(false), []);
-
-  const globalActions = useMemo(
-    () => [
-      {
-        id: 'search',
-        label: t('GLOBAL_ACTION_SEARCH'),
-        renderIcon: (
-          <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />
-        ),
-        onClick: handleSearchOpen,
-      },
-    ],
-    [handleSearchOpen, t],
-  );
   const viewingForm = useObservationFormsStore((state) => state.viewingForm);
 
   const patientUUID = usePatientUUID();
@@ -333,14 +313,10 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids} patientId={patientUUID}>
-      {/* Rendered outside ActionAreaLayout: uses position:fixed to overlay the header area.
-          Placed here (inside ClinicalAppProvider) so it has access to clinical context. */}
-      <PatientSearch isOpen={isSearchOpen} onClose={handleSearchClose} />
       <ActionAreaLayout
         headerWSideNav={
           <Header
             breadcrumbItems={breadcrumbItems}
-            globalActions={globalActions}
             userMenu={<UserGlobalAction />}
             sideNavItems={isActionAreaExpanded ? [] : sidebarItems}
             activeSideNavItemId={activeItemId}
@@ -424,4 +400,14 @@ const ConsultationPage: React.FC = () => {
   );
 };
 
-export default ConsultationPage;
+/**
+ * Distribución chilena: la ruta `:patientUuid` reutiliza el mismo componente al cambiar de paciente (por ejemplo, con
+ * Atrás del navegador). La clave lo vuelve a montar: la consulta abierta se cierra y su borrador se descarta, porque
+ * nunca debe pasar al otro paciente.
+ */
+const ConsultationPageForPatient: React.FC = () => {
+  const patientUUID = usePatientUUID();
+  return <ConsultationPage key={patientUUID ?? 'no-patient'} />;
+};
+
+export default ConsultationPageForPatient;

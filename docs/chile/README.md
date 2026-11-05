@@ -8,6 +8,13 @@ la distribución chilena agregó a la GUI AngularJS (`openmrs-module-bahmniapps-
 - [Widgets chilenos del tablero clínico](widgets.md): curvas, recetas e indicaciones, interconsulta de red
 - Cómo desarrollar contra el laboratorio FHIR del 115: más abajo.
 
+## Cambios de comportamiento frente a Bahmni
+
+- **Clínico, página del paciente:** no tiene la búsqueda de pacientes en la barra. El paciente se elige en la lista de
+  Clínico. Si el paciente cambia con una consulta abierta (por ejemplo, con Atrás del navegador), la consulta se cierra
+  y su borrador se descarta: nunca pasa al otro paciente. El aviso antes de descartar está pendiente (ADR-034 de
+  `urgencia-bahmni`). Punto tocado: `apps/clinical/src/pages/ConsultationPage.tsx`.
+
 ## Desarrollo contra el laboratorio FHIR del 115
 
 El laboratorio (`~/lab-fhir` en el 115) es una copia desechable de la base del 115 con fhir2 2.5.1,
