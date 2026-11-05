@@ -72,8 +72,11 @@ Prioridad: **1** lo usa el personal todos los días, **2** importante, **3** des
 ## Bloqueos de backend en el 115 (no son de la GUI)
 
 - **Actualizado el 04-11-2026:** el 115 ya publica FHIR **EncounterBundle** y **Appointment** (fhir2 2.5.1,
-  fhir2addlextension 1.0.0), pero guardar por EncounterBundle solo se probó en el laboratorio FHIR. Falta volver a
-  revisar si el 115 sigue rechazando `category` y `clinical-status` en **Condition**.
+  fhir2addlextension 1.0.0), y el 02-11 se guardó allí una consulta con medicamento. Falta volver a revisar si sigue
+  rechazando `category` y `clinical-status` en **Condition**.
+- **El laboratorio FHIR no representa al 115:** tiene bahmnicore 1.2.0-chile-hm-1 (el 115, hm-3), no tiene
+  fhirdiagnosticos y su red interna no llega al servidor de terminología. Desde la pantalla no se puede guardar
+  diagnósticos, medicamentos, alergias ni formularios; por API sí se guardan observación y diagnóstico.
 - `GET /openmrs/ws/rest/v1/bahmni/app/setting?module=commons` da 404 en el laboratorio. React cae al
   formato de fecha del navegador.
 - `Immunization` con `status`/`_sort` da 400 en el laboratorio.
