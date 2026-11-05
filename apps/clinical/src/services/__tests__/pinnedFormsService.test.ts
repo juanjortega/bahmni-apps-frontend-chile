@@ -92,20 +92,46 @@ describe('pinnedFormsService', () => {
     it('should save pinned forms successfully', async () => {
       const formNames = ['New Form A', 'New Form B'];
 
+      (get as jest.Mock).mockResolvedValue({
+        userProperties: {
+          defaultLocale: 'es',
+          pinnedObsTemplates: 'Old Form',
+        },
+      });
       (post as jest.Mock).mockResolvedValue({});
 
       await savePinnedForms(mockUserUuid, formNames);
 
-      // Should NOT call get - directly POST the new values
-      expect(get).not.toHaveBeenCalled();
+      // POST replaces the whole map: the other properties must travel with it
       expect(post).toHaveBeenCalledWith(
         '/openmrs/ws/rest/v1/user/user-uuid-123',
         {
           userProperties: {
+            defaultLocale: 'es',
             pinnedObsTemplates: 'New Form A###New Form B',
           },
         },
       );
+    });
+
+    it('should not write when the current properties cannot be read', async () => {
+      (get as jest.Mock).mockRejectedValue(new Error('Read request failed'));
+
+      await expect(savePinnedForms(mockUserUuid, ['Form A'])).rejects.toThrow(
+        'Read request failed',
+      );
+
+      expect(post).not.toHaveBeenCalled();
+    });
+
+    it('should not write when the response has no properties', async () => {
+      (get as jest.Mock).mockResolvedValue({ uuid: 'user-uuid-123' });
+
+      await expect(savePinnedForms(mockUserUuid, ['Form A'])).rejects.toThrow(
+        PINNED_FORMS_ERROR_MESSAGES.USER_NOT_FOUND,
+      );
+
+      expect(post).not.toHaveBeenCalled();
     });
 
     it('should throw error when no userUuid provided', async () => {
@@ -120,6 +146,7 @@ describe('pinnedFormsService', () => {
     it('should throw error message when request fails', async () => {
       const error = new Error('Save request failed');
 
+      (get as jest.Mock).mockResolvedValue(mockUserData);
       (post as jest.Mock).mockRejectedValue(error);
 
       await expect(savePinnedForms(mockUserUuid, ['Form A'])).rejects.toThrow(
