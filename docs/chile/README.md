@@ -5,6 +5,8 @@ la distribución chilena agregó a la GUI AngularJS (`openmrs-module-bahmniapps-
 `release/chile-hosp`) y repara lo que falla en un Bahmni chileno.
 
 - [Inventario de mejoras de la GUI Angular y su estado en React](inventario.md)
+- [Inventario de la GUI: React, AngularJS y qué conviene hacer](inventario-gui.md)
+- [Manual de usuario de la consulta](manual-consulta.md)
 - [Widgets chilenos del tablero clínico](widgets.md): curvas, recetas e indicaciones, interconsulta de red
 - Cómo desarrollar contra el laboratorio FHIR del 115: más abajo.
 

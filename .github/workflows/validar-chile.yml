@@ -1,0 +1,66 @@
+# Lint, pruebas y compilación del fork chileno en GitHub, sin ocupar la RAM del PC ni de los servidores.
+# No publica ni despliega nada. Requiere el mismo acceso a los paquetes npm de @juanjortega que construir-imagen-chile.
+name: Validar rama chilena
+
+on:
+  push:
+    branches:
+      - 'chile/**'
+      - release/chile
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+    branches:
+      - release/chile
+    paths-ignore:
+      - 'docs/**'
+
+concurrency:
+  group: validar-chile-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://npm.pkg.github.com
+          scope: "@juanjortega"
+
+      - name: Install dependencies
+        run: node .yarn/releases/yarn-1.22.19.cjs install --frozen-lockfile --ignore-scripts --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lint
+        run: node .yarn/releases/yarn-1.22.19.cjs -s nx run-many -t lint --parallel=2
+        env:
+          NX_DAEMON: "false"
+
+      - name: Test
+        run: node .yarn/releases/yarn-1.22.19.cjs -s nx run-many -t test --parallel=2 --maxWorkers=2
+        env:
+          NX_DAEMON: "false"
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Build
+        run: |
+          node .yarn/releases/yarn-1.22.19.cjs -s nx build distro --skip-nx-cache
+          test -f distro/dist/index.html
+        env:
+          NX_DAEMON: "false"
+          NODE_OPTIONS: --max-old-space-size=5120
