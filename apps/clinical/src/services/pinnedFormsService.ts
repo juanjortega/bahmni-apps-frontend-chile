@@ -65,10 +65,16 @@ export const savePinnedForms = async (
       (name) => typeof name === 'string' && name.trim().length > 0,
     );
 
-    // Directly POST the pinned forms without fetching existing user data
-    // The backend will merge with existing userProperties
+    // POST user/{uuid} replaces the whole userProperties map, so send it complete.
+    // If it cannot be read, nothing is written.
+    const userData = await get<UserData>(USER_PINNED_PREFERENCE_URL(userUuid));
+    if (!userData?.userProperties) {
+      throw new Error(PINNED_FORMS_ERROR_MESSAGES.USER_NOT_FOUND);
+    }
+
     await post(USER_PINNED_PREFERENCE_URL(userUuid), {
       userProperties: {
+        ...userData.userProperties,
         pinnedObsTemplates: validFormNames.join(PINNED_FORMS_DELIMITER),
       },
     });
