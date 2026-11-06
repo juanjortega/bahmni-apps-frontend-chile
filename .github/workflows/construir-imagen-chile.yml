@@ -1,0 +1,67 @@
+# Construye y publica la imagen del fork chileno en ghcr, sin ocupar la RAM de los servidores (webpack necesita ~5 GB).
+# Mismos pasos que scripts/chile/build-imagen.sh. Se lanza empujando una etiqueta como 1.1.0-chile.2 sobre release/chile:
+# una etiqueta dispara el workflow de su propio commit, mientras que uno manual tendría que existir también en main.
+#
+# Requiere, una sola vez, dar a este repo acceso de lectura a los paquetes npm privados de @juanjortega y escritura
+# al paquete de ghcr, en la configuración de cada paquete (Manage Actions access). Sin eso falla el install o el push.
+name: Construir imagen chilena
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+-chile.[0-9]+'
+
+env:
+  IMAGE: ghcr.io/juanjortega/bahmni-apps-frontend-chile
+  NODE_VERSION: "22"
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://npm.pkg.github.com
+          scope: "@juanjortega"
+
+      - name: Install dependencies
+        run: node .yarn/releases/yarn-1.22.19.cjs install --frozen-lockfile --ignore-scripts --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        run: |
+          node .yarn/releases/yarn-1.22.19.cjs nx build distro --skip-nx-cache
+          test -f distro/dist/index.html
+        env:
+          NODE_OPTIONS: --max-old-space-size=5120
+
+      # Sin esto la imagen saldría sin los widgets del tablero, sin que nada falle.
+      - name: Comprobar los widgets en el bundle
+        run: grep -rlq clinical-widgets distro/dist
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          SHA_TAG="sha-$(git rev-parse --short=12 HEAD)"
+          docker build -f docker/Dockerfile \
+            --label org.opencontainers.image.source=https://github.com/juanjortega/bahmni-apps-frontend-chile \
+            -t "$IMAGE:$TAG" -t "$IMAGE:$SHA_TAG" .
+          docker push "$IMAGE:$TAG"
+          docker push "$IMAGE:$SHA_TAG"

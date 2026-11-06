@@ -61,8 +61,9 @@ Se usan como cualquier control de una sección.
   - Primera: `1.1.0-chile.1` (y `sha-1c22526c8caf`), del commit `1c22526c`, publicada el 28-10-2026.
   - Se construye en un servidor de desarrollo, no en el PC, con `scripts/chile/build-imagen.sh`. La línea para pegar en PowerShell 5.1 está en la cabecera del script.
   - El script trabaja en `~/build/bahmni-apps-frontend-chile`, usa un contenedor `node:22` con tope de 6 GB y una config de Docker propia, y borra el token al terminar.
-  - No usa los workflows heredados de Bahmni: publican en su Docker Hub, y el `GITHUB_TOKEN` de este repo no lee los paquetes `@juanjortega`.
-  - El paquete de ghcr quedó **privado**. No hace falta bajarlo: la imagen se construye en el mismo servidor donde corre, y compose usa la imagen local.
+  - Alternativa sin cargar los servidores: `.github/workflows/construir-imagen-chile.yml`, que corre al empujar una etiqueta como `1.1.0-chile.2` sobre `release/chile`. Antes hay que dar a este repo, en la configuración de cada paquete, lectura a los paquetes npm de `@juanjortega` y escritura al de ghcr.
+  - Los workflows heredados de Bahmni no sirven: publican en su Docker Hub.
+  - El paquete de ghcr quedó **privado**. Una imagen construida en el mismo servidor donde corre no hace falta bajarla, porque compose usa la imagen local; una construida en otro lado o por el workflow hay que llevarla con login a ghcr o con `docker save | ssh ... docker load`.
 - **Desplegada en el .115** el 28-10-2026: `docker-compose.apps-frontend.yml` usa `1.1.0-chile.1`. Para volver a la de serie, poner `bahmni/bahmni-apps-frontend:1.0.0`.
 - **Tableros del .115** (28-10-2026): el tablero general del clínico v2 tiene las secciones «Curvas» (las curvas de «Tendencias» del clásico), «Recetas e indicaciones» e «Interconsulta de la red».
   - Vienen en la configuración del centro. El cambio ya está en su rama de publicación (a31ab26) y viaja en sus imágenes desde 1.1.0-52-widgets; la 1.1.0-60, que corre en el .115 (01-11-2026), lo trae.
