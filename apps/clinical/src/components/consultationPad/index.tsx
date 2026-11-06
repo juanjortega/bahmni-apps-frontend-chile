@@ -26,6 +26,7 @@ import React, {
   useSyncExternalStore,
   useState,
 } from 'react';
+import { useUnsavedConsultation } from '../../chile/consulta/useUnsavedConsultation';
 import { CDSS_SERVER_CONFIG_URL } from '../../constants/app';
 import {
   CONSULTATION_ERROR_MESSAGES,
@@ -156,6 +157,8 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   const hasConsultationData = useSyncExternalStore(subscribeAll, () =>
     activeEntries.some((entry) => entry.hasData()),
   );
+
+  useUnsavedConsultation(hasConsultationData);
 
   const isEncounterDetailsFormReady = useEncounterDetailsStore(
     (state) => state.isEncounterDetailsFormReady,
@@ -567,6 +570,12 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   };
 
   const handleCancel = () => {
+    // Distribución chilena: «Cancelar» con datos pide confirmar antes de descartarlos.
+    if (
+      hasConsultationData &&
+      !window.confirm(t('CONSULTATION_DISCARD_CONFIRM'))
+    )
+      return;
     activeEntries.forEach((entry) => entry.reset());
     onClose();
   };
@@ -575,24 +584,26 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
     isError || isEncounterTypePropInvalid || !!encounterTypesError;
 
   const renderPadContent = (() => {
-    if (hasError)
-      return (
-        <div className={styles.error}>
-          <h3>{t('CONSULTATION_PAD_ERROR_TITLE')}</h3>
-          <p>{t('CONSULTATION_PAD_ERROR_BODY')}</p>
-        </div>
-      );
+    // Distribución chilena: el error se muestra sobre la consulta, sin desmontarla, para no perder lo escrito.
     return (
-      <div className={styles.formList}>
-        {activeEntries.map((entry) => (
-          <InputControlRenderer
-            key={entry.key}
-            entry={entry}
-            encounterType={resolvedEncounterType!}
-            encounterSessionStartContext={effectiveContext}
-          />
-        ))}
-      </div>
+      <>
+        {hasError && (
+          <div className={styles.error}>
+            <h3>{t('CONSULTATION_PAD_ERROR_TITLE')}</h3>
+            <p>{t('CONSULTATION_PAD_ERROR_BODY')}</p>
+          </div>
+        )}
+        <div className={styles.formList}>
+          {activeEntries.map((entry) => (
+            <InputControlRenderer
+              key={entry.key}
+              entry={entry}
+              encounterType={resolvedEncounterType!}
+              encounterSessionStartContext={effectiveContext}
+            />
+          ))}
+        </div>
+      </>
     );
   })();
 

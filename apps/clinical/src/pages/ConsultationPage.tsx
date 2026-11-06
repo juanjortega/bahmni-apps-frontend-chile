@@ -32,6 +32,7 @@ import React, {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router';
+import { useDiscardedOnPatientChange } from '../chile/consulta/useDiscardedOnPatientChange';
 import ConsultationPadContainer from '../components/consultationPadContainer';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
 import PatientHeader from '../components/patientHeader/PatientHeader';
@@ -286,7 +287,8 @@ const ConsultationPage: React.FC = () => {
       />
     );
   }
-  if (dashboardConfigError || !filteredDashboardConfig) {
+  // Distribución chilena: una lectura fallida con datos en caché solo avisa; reemplazar la página borraría el borrador.
+  if (!filteredDashboardConfig) {
     return (
       <div
         id="error-loading-dashboard-config"
@@ -407,6 +409,7 @@ const ConsultationPage: React.FC = () => {
  */
 const ConsultationPageForPatient: React.FC = () => {
   const patientUUID = usePatientUUID();
+  useDiscardedOnPatientChange(patientUUID);
   return <ConsultationPage key={patientUUID ?? 'no-patient'} />;
 };
 

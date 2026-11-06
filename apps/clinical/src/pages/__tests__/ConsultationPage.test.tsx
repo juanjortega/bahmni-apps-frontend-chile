@@ -1091,6 +1091,49 @@ describe('ConsultationPage', () => {
     });
   });
 
+  describe('Distribución chilena: un error de lectura no borra la consulta', () => {
+    it('keeps the consultation open when a background dashboard read fails', async () => {
+      (useUserPrivilege as jest.Mock).mockReturnValue({
+        userPrivileges: [{ uuid: '1', name: 'VIEW_PATIENTS' }],
+      });
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/consultation']}>
+            <ConsultationPage />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('mocked-consultation-pad'),
+        ).toBeInTheDocument();
+      });
+
+      (getConfig as jest.Mock).mockRejectedValue(new Error('Red caída'));
+      await act(async () => {
+        await queryClient.refetchQueries({ queryKey: ['dashboardConfig'] });
+      });
+
+      await waitFor(() => {
+        expect(useNotification().addNotification).toHaveBeenCalled();
+      });
+      expect(
+        screen.queryByTestId('error-loading-dashboard-config-test-id'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('mocked-consultation-pad')).toBeInTheDocument();
+    });
+  });
+
   describe('Distribución chilena: el paciente no cambia con una consulta abierta', () => {
     it('no ofrece la búsqueda de pacientes en la barra', async () => {
       renderWithProvider();

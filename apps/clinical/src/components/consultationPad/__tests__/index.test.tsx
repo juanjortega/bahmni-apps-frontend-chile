@@ -668,6 +668,52 @@ describe('ConsultationPad', () => {
       mockRegistry.forEach((entry) => expect(entry.reset).toHaveBeenCalled());
       expect(onClose).toHaveBeenCalled();
     });
+
+    describe('distribución chilena: con datos sin guardar', () => {
+      let confirm: jest.SpyInstance;
+
+      beforeEach(() => {
+        (mockRegistry[0].hasData as jest.Mock).mockReturnValue(true);
+        confirm = jest.spyOn(window, 'confirm');
+      });
+
+      afterEach(() => confirm.mockRestore());
+
+      it('keeps the draft when the user declines', async () => {
+        confirm.mockReturnValue(false);
+        const onClose = jest.fn();
+
+        renderComponent({ onClose });
+        await userEvent.click(screen.getByTestId('secondary-button'));
+
+        expect(confirm).toHaveBeenCalledTimes(1);
+        mockRegistry.forEach((entry) =>
+          expect(entry.reset).not.toHaveBeenCalled(),
+        );
+        expect(onClose).not.toHaveBeenCalled();
+      });
+
+      it('discards when the user accepts', async () => {
+        confirm.mockReturnValue(true);
+        const onClose = jest.fn();
+
+        renderComponent({ onClose });
+        await userEvent.click(screen.getByTestId('secondary-button'));
+
+        mockRegistry.forEach((entry) => expect(entry.reset).toHaveBeenCalled());
+        expect(onClose).toHaveBeenCalled();
+      });
+    });
+
+    it('distribución chilena: no pregunta si no hay datos', async () => {
+      const confirm = jest.spyOn(window, 'confirm');
+
+      renderComponent();
+      await userEvent.click(screen.getByTestId('secondary-button'));
+
+      expect(confirm).not.toHaveBeenCalled();
+      confirm.mockRestore();
+    });
   });
 
   describe('submit', () => {
