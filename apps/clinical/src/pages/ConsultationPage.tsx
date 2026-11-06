@@ -17,6 +17,8 @@ import {
   useSubscribeConsultationStart,
 } from '@bahmni/services';
 import {
+  LocationProvider,
+  LocationSelector,
   ProgramDetails,
   useNotification,
   useUserPrivilege,
@@ -32,6 +34,9 @@ import React, {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router';
+import { LanguageSelector } from '../chile/consulta/LanguageSelector';
+import { PatientAllergies } from '../chile/consulta/PatientAllergies';
+import bandStyles from '../chile/consulta/styles/consulta.module.scss';
 import { useDiscardedOnPatientChange } from '../chile/consulta/useDiscardedOnPatientChange';
 import ConsultationPadContainer from '../components/consultationPadContainer';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
@@ -48,7 +53,6 @@ import {
 } from './constant';
 import { DashboardConfig } from './models';
 import dashboardConfigSchema from './schema.json';
-import styles from './styles/ConsultationPage.module.scss';
 import {
   getDefaultDashboard,
   getSidebarItems,
@@ -317,14 +321,51 @@ const ConsultationPage: React.FC = () => {
     <ClinicalAppProvider episodeUuids={episodeUuids} patientId={patientUUID}>
       <ActionAreaLayout
         headerWSideNav={
-          <Header
-            breadcrumbItems={breadcrumbItems}
-            userMenu={<UserGlobalAction />}
-            sideNavItems={isActionAreaExpanded ? [] : sidebarItems}
-            activeSideNavItemId={activeItemId}
-            onSideNavItemClick={handleItemClick}
-            isRail={isActionAreaVisible}
-          />
+          <>
+            <Header
+              breadcrumbItems={breadcrumbItems}
+              globalFeatures={[
+                <div key="location" className={bandStyles.headerSelector}>
+                  <LocationProvider>
+                    <LocationSelector />
+                  </LocationProvider>
+                </div>,
+                <div key="language" className={bandStyles.headerSelector}>
+                  <LanguageSelector />
+                </div>,
+              ]}
+              userMenu={<UserGlobalAction />}
+              sideNavItems={isActionAreaExpanded ? [] : sidebarItems}
+              activeSideNavItemId={activeItemId}
+              onSideNavItemClick={handleItemClick}
+              isRail={isActionAreaVisible}
+            />
+            {/* Distribución chilena (ADR-034): la banda va sobre los dos paneles y se ve en todos los modos. */}
+            {shouldRenderPatientContent && (
+              <div
+                id="section-sticky-header"
+                data-testid="section-sticky-header-test-id"
+                role="region"
+                aria-label={t('PATIENT_HEADER_SECTION')}
+                className={[
+                  bandStyles.band,
+                  !isActionAreaExpanded &&
+                    (isActionAreaVisible
+                      ? bandStyles.withRail
+                      : bandStyles.withSideNav),
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <PatientHeader
+                  isActionAreaVisible={isActionAreaVisible}
+                  printOptions={filteredPrintOptions}
+                />
+                {patientUUID && <PatientAllergies patientUuid={patientUUID} />}
+                {renderContextInformation()}
+              </div>
+            )}
+          </>
         }
         mainDisplay={
           <Suspense
@@ -356,26 +397,11 @@ const ConsultationPage: React.FC = () => {
               </div>
             )}
             {shouldRenderPatientContent && (
-              <>
-                <div
-                  id="section-sticky-header"
-                  data-testid="section-sticky-header-test-id"
-                  role="region"
-                  aria-label={t('PATIENT_HEADER_SECTION')}
-                  className={styles.stickySection}
-                >
-                  <PatientHeader
-                    isActionAreaVisible={isActionAreaVisible}
-                    printOptions={filteredPrintOptions}
-                  />
-                  {renderContextInformation()}
-                </div>
-                <DashboardContainer
-                  sections={filteredDashboardConfig!.sections}
-                  activeItemId={activeItemId}
-                  scrollTrigger={scrollTrigger}
-                />
-              </>
+              <DashboardContainer
+                sections={filteredDashboardConfig!.sections}
+                activeItemId={activeItemId}
+                scrollTrigger={scrollTrigger}
+              />
             )}
           </Suspense>
         }

@@ -1,0 +1,56 @@
+@use "@carbon/react/scss/spacing" as *;
+@use "@carbon/react/scss/theme" as *;
+@use "@carbon/react/scss/breakpoint" as *;
+
+// Banda del paciente sobre los dos paneles (ADR-034): se ve también con la consulta a pantalla completa.
+.band {
+  position: relative;
+  z-index: 10;
+  flex: none;
+  box-shadow: 0 2px 6px $shadow;
+  background: $layer-background-01;
+  padding-inline: $spacing-05;
+}
+
+// La navegación lateral es fija: la banda deja su espacio, igual que el panel del tablero.
+.withSideNav {
+  margin-inline-start: 16rem;
+}
+
+.withRail {
+  margin-inline-start: 3rem;
+}
+
+@include breakpoint-down(lg) {
+  .withSideNav {
+    margin-inline-start: 3rem;
+  }
+}
+
+.allergies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-03;
+  padding-block-end: $spacing-03;
+  font-size: 0.875rem;
+}
+
+.allergiesLabel {
+  font-weight: 600;
+}
+
+.allergyAlert {
+  color: $text-error;
+}
+
+// Los selectores son claros sobre la barra: se restauran los tokens de campo y texto, como en Inicio.
+.headerSelector {
+  --cds-layer: #{$layer-02};
+  --cds-field: #{$field-02};
+  --cds-text-primary: #{$text-primary};
+
+  display: flex;
+  align-items: center;
+  padding: 0 $spacing-03;
+  min-width: $spacing-12;
+}

@@ -29,4 +29,9 @@ La consulta se guarda toda junta con **Hecho**. Hasta entonces, lo escrito está
 
 ## Qué sigue igual
 - La consulta se abre con **Nueva Consulta**.
-- **Ampliar** deja la consulta a pantalla completa, en la misma ventana. En ese modo, la banda del paciente no se ve: revise su nombre antes de ampliar.
+- **Ampliar** deja la consulta a pantalla completa, en la misma ventana.
+
+## Barra y banda del paciente
+- **Barra superior:** migas, ubicación, idioma y **Hola, usuario**.
+- **Banda del paciente:** nombre, identificadores, sexo, edad y **alergias**. Queda sobre la ficha y la consulta, y sigue a la vista al ampliar.
+- **Alergias:** si no se pudieron cargar, la banda lo dice. Eso no significa que el paciente no tenga: revise la ficha antes de indicar.

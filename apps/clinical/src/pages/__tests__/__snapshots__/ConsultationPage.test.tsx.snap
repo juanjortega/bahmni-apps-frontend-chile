@@ -43,6 +43,17 @@ exports[`ConsultationPage Snapshot should match the snapshot 1`] = `
           Current Patient
         </div>
       </div>
+      <div
+        aria-label="Patient Information Section"
+        class="band withSideNav"
+        data-testid="section-sticky-header-test-id"
+        id="section-sticky-header"
+        role="region"
+      >
+        <div
+          data-testid="mocked-patient-header"
+        />
+      </div>
     </div>
     <div
       data-testid="mocked-patient-section"
@@ -53,17 +64,6 @@ exports[`ConsultationPage Snapshot should match the snapshot 1`] = `
     <div
       data-testid="mocked-main-display"
     >
-      <div
-        aria-label="Patient Information Section"
-        class="stickySection"
-        data-testid="section-sticky-header-test-id"
-        id="section-sticky-header"
-        role="region"
-      >
-        <div
-          data-testid="mocked-patient-header"
-        />
-      </div>
       <div
         data-active-item="vitals"
         data-scroll-trigger="0"
