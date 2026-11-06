@@ -54,3 +54,32 @@
   padding: 0 $spacing-03;
   min-width: $spacing-12;
 }
+
+.bandRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-03;
+}
+
+.modeSwitch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: $spacing-02;
+  padding-block-end: $spacing-03;
+  margin-inline-start: auto;
+}
+
+// Modo ficha: la consulta queda montada y oculta, y el tablero ocupa todo el ancho.
+.modeChart {
+  [data-panel]:has(#action-display-area),
+  :global(#panel-separator) {
+    display: none !important;
+  }
+
+  [data-panel]:has(#main-display-area) {
+    flex: 1 1 100% !important;
+    min-width: 100% !important;
+  }
+}

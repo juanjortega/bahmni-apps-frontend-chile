@@ -29,7 +29,17 @@ La consulta se guarda toda junta con **Hecho**. Hasta entonces, lo escrito está
 
 ## Qué sigue igual
 - La consulta se abre con **Nueva Consulta**.
-- **Ampliar** deja la consulta a pantalla completa, en la misma ventana.
+
+## Cómo ver la consulta
+Con una consulta abierta, la banda del paciente muestra tres botones. **Cambiar entre ellos no borra lo escrito.**
+
+| Botón | Qué se ve |
+|---|---|
+| **Ficha** | Solo la ficha. La consulta sigue abierta, oculta: vuelva con cualquiera de los otros dos |
+| **Atención lateral** | La ficha a la izquierda y la consulta a la derecha |
+| **Pantalla completa** | Solo la consulta, en la misma ventana |
+
+La próxima consulta se abre en el último modo que eligió, entre **Atención lateral** y **Pantalla completa**. Se guarda en su usuario; si no se puede, queda solo en este navegador y aparece un aviso.
 
 ## Barra y banda del paciente
 - **Barra superior:** migas, ubicación, idioma y **Hola, usuario**.

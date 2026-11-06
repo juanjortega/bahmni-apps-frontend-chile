@@ -7,6 +7,7 @@ import {
   useHasPrivilege,
   useNotification,
   useUserPrivilege,
+  useActivePractitioner,
   usePatientUUID,
 } from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -120,9 +121,10 @@ jest.mock('@bahmni/design-system', () => ({
       {description}
     </div>
   )),
-  Button: jest.fn(({ children, onClick, style }) => (
+  Button: jest.fn(({ children, onClick, style, ...rest }) => (
     <button
-      data-testid="carbon-button"
+      data-testid={rest['data-testid'] ?? 'carbon-button'}
+      aria-pressed={rest['aria-pressed']}
       onClick={onClick}
       data-style={JSON.stringify(style)}
     >
@@ -218,6 +220,7 @@ jest.mock('@bahmni/design-system', () => ({
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   useUserPrivilege: jest.fn(),
+  useActivePractitioner: jest.fn(),
   useHasPrivilege: jest.fn(),
   useNotification: jest.fn(),
   usePatientUUID: jest.fn(),
@@ -315,6 +318,7 @@ describe('ConsultationPage', () => {
 
     (usePatientUUID as jest.Mock).mockReturnValue(null);
     (getFormattedPatientById as jest.Mock).mockResolvedValue(null);
+    (useActivePractitioner as jest.Mock).mockReturnValue({ user: undefined });
   });
 
   afterEach(() => {
@@ -1088,6 +1092,81 @@ describe('ConsultationPage', () => {
       expect(screen.getByTestId('toggle-expand-button')).toHaveTextContent(
         'Expand',
       );
+    });
+  });
+
+  describe('Distribución chilena: modos de la consulta', () => {
+    const openConsultation = async () => {
+      (usePatientUUID as jest.Mock).mockReturnValue('patient-a');
+      (getFormattedPatientById as jest.Mock).mockResolvedValue({
+        fullName: 'John Doe',
+      });
+      renderWithProvider();
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('consultation-mode-switch'),
+        ).toBeInTheDocument();
+      });
+    };
+
+    afterEach(() => localStorage.clear());
+
+    it('no ofrece modos sin una consulta abierta', async () => {
+      renderWithProvider();
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('consultation-mode-switch'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('la ficha oculta la consulta sin desmontarla', async () => {
+      await openConsultation();
+
+      fireEvent.click(screen.getByTestId('consultation-mode-ficha'));
+
+      expect(screen.getByTestId('mocked-consultation-pad')).toBeInTheDocument();
+      expect(screen.getByTestId('consultation-mode-ficha')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      fireEvent.click(screen.getByTestId('consultation-mode-lateral'));
+      expect(screen.getByTestId('consultation-mode-lateral')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    });
+
+    it('recuerda la pantalla completa para la próxima consulta', async () => {
+      await openConsultation();
+
+      fireEvent.click(screen.getByTestId('consultation-mode-completa'));
+      expect(screen.getByTestId('toggle-expand-button')).toHaveTextContent(
+        'Collapse',
+      );
+      fireEvent.click(screen.getByTestId('close-consultation-pad-button'));
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('mocked-consultation-pad'),
+        ).not.toBeInTheDocument();
+      });
+
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId('toggle-expand-button')).toHaveTextContent(
+          'Collapse',
+        );
+      });
     });
   });
 

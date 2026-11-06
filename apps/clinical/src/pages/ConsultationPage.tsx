@@ -22,6 +22,7 @@ import {
   ProgramDetails,
   useNotification,
   useUserPrivilege,
+  useActivePractitioner,
   usePatientUUID,
   UserGlobalAction,
 } from '@bahmni/widgets';
@@ -34,9 +35,14 @@ import React, {
   useState,
 } from 'react';
 import { useSearchParams } from 'react-router';
+import {
+  type ConsultationMode,
+  ConsultationModeSwitch,
+} from '../chile/consulta/ConsultationModeSwitch';
 import { LanguageSelector } from '../chile/consulta/LanguageSelector';
 import { PatientAllergies } from '../chile/consulta/PatientAllergies';
 import bandStyles from '../chile/consulta/styles/consulta.module.scss';
+import { useConsultationPreference } from '../chile/consulta/useConsultationPreference';
 import { useDiscardedOnPatientChange } from '../chile/consulta/useDiscardedOnPatientChange';
 import ConsultationPadContainer from '../components/consultationPadContainer';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
@@ -87,6 +93,20 @@ const ConsultationPage: React.FC = () => {
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
   const [isActionAreaExpanded, setIsActionAreaExpanded] = useState(false);
+  // Distribución chilena (ADR-034): la ficha oculta la consulta sin desmontarla, y se recuerda el modo elegido.
+  const [isConsultationHidden, setIsConsultationHidden] = useState(false);
+  const { user: activeUser } = useActivePractitioner();
+  const { preferred, remember } = useConsultationPreference(activeUser?.uuid);
+  const consultationMode: ConsultationMode = isConsultationHidden
+    ? 'ficha'
+    : isActionAreaExpanded
+      ? 'completa'
+      : 'lateral';
+  const handleModeChange = (mode: ConsultationMode) => {
+    setIsConsultationHidden(mode === 'ficha');
+    setIsActionAreaExpanded(mode === 'completa');
+    if (mode !== 'ficha') remember(mode);
+  };
   const [consultationPayload, setConsultationPayload] =
     useState<ConsultationEventPayload | null>(null);
 
@@ -94,7 +114,8 @@ const ConsultationPage: React.FC = () => {
     useCallback((event) => {
       setConsultationPayload(event);
       setIsActionAreaVisible(true);
-      setIsActionAreaExpanded(false);
+      setIsConsultationHidden(false);
+      setIsActionAreaExpanded(preferred.current === 'completa');
     }, []),
   );
   const [searchParams] = useSearchParams();
@@ -319,111 +340,124 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids} patientId={patientUUID}>
-      <ActionAreaLayout
-        headerWSideNav={
-          <>
-            <Header
-              breadcrumbItems={breadcrumbItems}
-              globalFeatures={[
-                <div key="location" className={bandStyles.headerSelector}>
-                  <LocationProvider>
-                    <LocationSelector />
-                  </LocationProvider>
-                </div>,
-                <div key="language" className={bandStyles.headerSelector}>
-                  <LanguageSelector />
-                </div>,
-              ]}
-              userMenu={<UserGlobalAction />}
-              sideNavItems={isActionAreaExpanded ? [] : sidebarItems}
-              activeSideNavItemId={activeItemId}
-              onSideNavItemClick={handleItemClick}
-              isRail={isActionAreaVisible}
-            />
-            {/* Distribución chilena (ADR-034): la banda va sobre los dos paneles y se ve en todos los modos. */}
-            {shouldRenderPatientContent && (
-              <div
-                id="section-sticky-header"
-                data-testid="section-sticky-header-test-id"
-                role="region"
-                aria-label={t('PATIENT_HEADER_SECTION')}
-                className={[
-                  bandStyles.band,
-                  !isActionAreaExpanded &&
-                    (isActionAreaVisible
-                      ? bandStyles.withRail
-                      : bandStyles.withSideNav),
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-              >
-                <PatientHeader
-                  isActionAreaVisible={isActionAreaVisible}
-                  printOptions={filteredPrintOptions}
+      <div className={isConsultationHidden ? bandStyles.modeChart : undefined}>
+        <ActionAreaLayout
+          headerWSideNav={
+            <>
+              <Header
+                breadcrumbItems={breadcrumbItems}
+                globalFeatures={[
+                  <div key="location" className={bandStyles.headerSelector}>
+                    <LocationProvider>
+                      <LocationSelector />
+                    </LocationProvider>
+                  </div>,
+                  <div key="language" className={bandStyles.headerSelector}>
+                    <LanguageSelector />
+                  </div>,
+                ]}
+                userMenu={<UserGlobalAction />}
+                sideNavItems={isActionAreaExpanded ? [] : sidebarItems}
+                activeSideNavItemId={activeItemId}
+                onSideNavItemClick={handleItemClick}
+                isRail={isActionAreaVisible}
+              />
+              {/* Distribución chilena (ADR-034): la banda va sobre los dos paneles y se ve en todos los modos. */}
+              {shouldRenderPatientContent && (
+                <div
+                  id="section-sticky-header"
+                  data-testid="section-sticky-header-test-id"
+                  role="region"
+                  aria-label={t('PATIENT_HEADER_SECTION')}
+                  className={[
+                    bandStyles.band,
+                    !isActionAreaExpanded &&
+                      (isActionAreaVisible
+                        ? bandStyles.withRail
+                        : bandStyles.withSideNav),
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <PatientHeader
+                    isActionAreaVisible={isActionAreaVisible}
+                    printOptions={filteredPrintOptions}
+                  />
+                  <div className={bandStyles.bandRow}>
+                    {patientUUID && (
+                      <PatientAllergies patientUuid={patientUUID} />
+                    )}
+                    {isActionAreaVisible && (
+                      <ConsultationModeSwitch
+                        mode={consultationMode}
+                        onChange={handleModeChange}
+                      />
+                    )}
+                  </div>
+                  {renderContextInformation()}
+                </div>
+              )}
+            </>
+          }
+          mainDisplay={
+            <Suspense
+              data-testid="suspense-dashboard-container-test-id"
+              fallback={
+                <Loading
+                  id="loading-dashboard-content"
+                  data-testid="loading-dashboard-content-test-id"
+                  description={t('LOADING_DASHBOARD_CONTENT')}
+                  role="status"
                 />
-                {patientUUID && <PatientAllergies patientUuid={patientUUID} />}
-                {renderContextInformation()}
-              </div>
-            )}
-          </>
-        }
-        mainDisplay={
-          <Suspense
-            data-testid="suspense-dashboard-container-test-id"
-            fallback={
-              <Loading
-                id="loading-dashboard-content"
-                data-testid="loading-dashboard-content-test-id"
-                description={t('LOADING_DASHBOARD_CONTENT')}
-                role="status"
-              />
-            }
-          >
-            {patientUUID && isPatientPending && (
-              <Loading
-                id="loading-patient"
-                data-testid="loading-patient-test-id"
-                description={t('LOADING_PATIENT_DATA')}
-                role="status"
-              />
-            )}
-            {patientErrorMessageKey && (
-              <div
-                id="error-loading-patient"
-                data-testid="error-loading-patient-test-id"
-                role="alert"
-              >
-                {t(patientErrorMessageKey)}
-              </div>
-            )}
-            {shouldRenderPatientContent && (
-              <DashboardContainer
-                sections={filteredDashboardConfig!.sections}
-                activeItemId={activeItemId}
-                scrollTrigger={scrollTrigger}
-              />
-            )}
-          </Suspense>
-        }
-        isActionAreaVisible={isActionAreaVisible}
-        isActionAreaExpanded={isActionAreaExpanded}
-        layoutVariant={viewingForm ? 'extended' : 'default'}
-        actionArea={
-          consultationPayload && (
-            <ConsultationPadContainer
-              encounterSessionStartContext={consultationPayload}
-              onClose={() => {
-                setIsActionAreaVisible((prev) => !prev);
-                setIsActionAreaExpanded(false);
-              }}
-              isActionAreaExpanded={isActionAreaExpanded}
-              onToggleActionAreaExpand={() =>
-                setIsActionAreaExpanded((prev) => !prev)
               }
-            />
-          )
-        }
-      />
+            >
+              {patientUUID && isPatientPending && (
+                <Loading
+                  id="loading-patient"
+                  data-testid="loading-patient-test-id"
+                  description={t('LOADING_PATIENT_DATA')}
+                  role="status"
+                />
+              )}
+              {patientErrorMessageKey && (
+                <div
+                  id="error-loading-patient"
+                  data-testid="error-loading-patient-test-id"
+                  role="alert"
+                >
+                  {t(patientErrorMessageKey)}
+                </div>
+              )}
+              {shouldRenderPatientContent && (
+                <DashboardContainer
+                  sections={filteredDashboardConfig!.sections}
+                  activeItemId={activeItemId}
+                  scrollTrigger={scrollTrigger}
+                />
+              )}
+            </Suspense>
+          }
+          isActionAreaVisible={isActionAreaVisible}
+          isActionAreaExpanded={isActionAreaExpanded}
+          layoutVariant={viewingForm ? 'extended' : 'default'}
+          actionArea={
+            consultationPayload && (
+              <ConsultationPadContainer
+                encounterSessionStartContext={consultationPayload}
+                onClose={() => {
+                  setIsActionAreaVisible((prev) => !prev);
+                  setIsActionAreaExpanded(false);
+                  setIsConsultationHidden(false);
+                }}
+                isActionAreaExpanded={isActionAreaExpanded}
+                onToggleActionAreaExpand={() =>
+                  setIsActionAreaExpanded((prev) => !prev)
+                }
+              />
+            )
+          }
+        />
+      </div>
     </ClinicalAppProvider>
   );
 };
