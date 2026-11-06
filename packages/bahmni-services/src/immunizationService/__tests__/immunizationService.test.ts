@@ -38,10 +38,29 @@ describe('getPatientImmunizationsBundle', () => {
       'completed',
     );
 
-    expect(get).toHaveBeenCalledWith(
-      PATIENT_IMMUNIZATION_URL(PATIENT_UUID, 'completed'),
+    expect(get).toHaveBeenCalledWith(PATIENT_IMMUNIZATION_URL(PATIENT_UUID));
+    expect(result).toEqual({ ...mockBundle, total: 1 });
+  });
+
+  it('does not send status to the server and filters it client-side', async () => {
+    const notDone: Immunization = {
+      ...mockImmunization,
+      id: 'imm-2',
+      status: 'not-done',
+    };
+    (get as jest.Mock).mockResolvedValueOnce({
+      ...mockBundle,
+      entry: [{ resource: mockImmunization }, { resource: notDone }],
+    });
+
+    const result = await getPatientImmunizationsBundle(
+      PATIENT_UUID,
+      'not-done',
     );
-    expect(result).toEqual(mockBundle);
+
+    expect(get).toHaveBeenCalledWith(expect.not.stringContaining('status='));
+    expect(result.entry).toEqual([{ resource: notDone }]);
+    expect(result.total).toBe(1);
   });
 
   it('propagates errors from the API', async () => {
@@ -68,9 +87,7 @@ describe('getPatientImmunizations', () => {
 
     await getPatientImmunizations(PATIENT_UUID, status);
 
-    expect(get).toHaveBeenCalledWith(
-      PATIENT_IMMUNIZATION_URL(PATIENT_UUID, status),
-    );
+    expect(get).toHaveBeenCalledWith(PATIENT_IMMUNIZATION_URL(PATIENT_UUID));
   });
 
   it('returns extracted Immunization[] from bundle entries', async () => {

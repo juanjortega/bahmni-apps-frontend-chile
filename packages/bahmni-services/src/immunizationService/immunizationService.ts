@@ -20,7 +20,15 @@ export async function getPatientImmunizationsBundle(
   patientUuid: string,
   status?: ImmunizationStatus,
 ): Promise<Bundle<Immunization>> {
-  return get<Bundle<Immunization>>(
-    PATIENT_IMMUNIZATION_URL(patientUuid, status),
+  const bundle = await get<Bundle<Immunization>>(
+    PATIENT_IMMUNIZATION_URL(patientUuid),
   );
+  if (!status || !bundle.entry) return bundle;
+
+  const entry = bundle.entry.filter(
+    (item) =>
+      item.resource?.resourceType !== 'Immunization' ||
+      item.resource.status === status,
+  );
+  return { ...bundle, entry, total: entry.length };
 }
