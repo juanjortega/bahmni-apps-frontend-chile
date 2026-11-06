@@ -1,5 +1,6 @@
 import { type CDSSRule, Extension } from '@bahmni/services';
 import type { PrintOption } from '@bahmni/widgets';
+import type { ConsultationTabConfig } from '../../chile/consulta/resolveTabs';
 
 export interface AllergyConceptMap {
   medicationAllergenUuid: string;
@@ -32,6 +33,8 @@ export interface ConsultationPad {
   statDurationInMilliseconds?: number;
   allowedVisitTypes?: string[];
   inputControls: InputControl[];
+  /** Distribución chilena (ADR-034): temas de la consulta. */
+  tabs?: ConsultationTabConfig[];
 }
 
 export interface Dashboard {

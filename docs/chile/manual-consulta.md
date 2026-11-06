@@ -41,6 +41,15 @@ Con una consulta abierta, la banda del paciente muestra tres botones. **Cambiar 
 
 La próxima consulta se abre en el último modo que eligió, entre **Atención lateral** y **Pantalla completa**. Se guarda en su usuario; si no se puede, queda solo en este navegador y aparece un aviso.
 
+## Temas de la consulta
+Si su centro los configuró, la consulta se ordena por temas en una barra, por ejemplo **Evaluación**, **Diagnósticos**, **Tratamiento**, **Órdenes** y **Formularios**.
+
+- **Todo se guarda junto** con **Hecho**: no hay un guardado por tema.
+- Cambiar de tema no borra lo escrito.
+- Un **punto** indica que ese tema tiene datos sin guardar.
+- Si al guardar falta algo, se abre el primer tema con problemas, marcado con **revisar**.
+- Si su centro no los configuró, la consulta se ve en una sola columna.
+
 ## Barra y banda del paciente
 - **Barra superior:** migas, ubicación, idioma y **Hola, usuario**.
 - **Banda del paciente:** nombre, identificadores, sexo, edad y **alergias**. Queda sobre la ficha y la consulta, y sigue a la vista al ampliar.

@@ -26,6 +26,7 @@ import React, {
   useSyncExternalStore,
   useState,
 } from 'react';
+import { ConsultationTabs } from '../../chile/consulta/ConsultationTabs';
 import { useUnsavedConsultation } from '../../chile/consulta/useUnsavedConsultation';
 import { CDSS_SERVER_CONFIG_URL } from '../../constants/app';
 import {
@@ -77,6 +78,7 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
   const { t } = useTranslation();
   const { addNotification } = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [invalidKeys, setInvalidKeys] = useState<string[]>([]);
   const [shouldLoadCDSSConfig, setShouldLoadCDSSConfig] = useState(false);
   const pendingCDSSCheckRef = useRef<CDSSCheckEventDetail | null>(null);
 
@@ -432,6 +434,14 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
       });
     }
 
+    // Distribución chilena: los temas con problemas se marcan y se abre el primero.
+    setInvalidKeys([
+      ...validationResults.filter((r) => !r.valid).map((r) => r.key),
+      ...activeEntries
+        .filter((entry) => entry.hasCriticalCDSCards?.() === true)
+        .map((entry) => entry.key),
+    ]);
+
     if (!validationResults.every((r) => r.valid)) return;
 
     const hasCriticalCDSCards = activeEntries.some(
@@ -594,14 +604,19 @@ const ConsultationPad: React.FC<ConsultationPadProps> = ({
           </div>
         )}
         <div className={styles.formList}>
-          {activeEntries.map((entry) => (
-            <InputControlRenderer
-              key={entry.key}
-              entry={entry}
-              encounterType={resolvedEncounterType!}
-              encounterSessionStartContext={effectiveContext}
-            />
-          ))}
+          <ConsultationTabs
+            tabs={action ? undefined : clinicalConfig?.consultationPad?.tabs}
+            entries={activeEntries}
+            invalidKeys={invalidKeys}
+            renderEntry={(entry) => (
+              <InputControlRenderer
+                key={entry.key}
+                entry={entry}
+                encounterType={resolvedEncounterType!}
+                encounterSessionStartContext={effectiveContext}
+              />
+            )}
+          />
         </div>
       </>
     );

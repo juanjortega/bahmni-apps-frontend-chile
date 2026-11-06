@@ -82,6 +82,7 @@ jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   useActivePractitioner: jest.fn(),
   useHasPrivilege: jest.fn().mockReturnValue(true),
+  useUserPrivilege: () => ({ userPrivileges: [] }),
   useNotification: jest.fn(),
 }));
 

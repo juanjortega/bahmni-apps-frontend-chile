@@ -14,8 +14,28 @@ la distribución chilena agregó a la GUI AngularJS (`openmrs-module-bahmniapps-
 
 - **Clínico, página del paciente:** no tiene la búsqueda de pacientes en la barra. El paciente se elige en la lista de
   Clínico. Si el paciente cambia con una consulta abierta (por ejemplo, con Atrás del navegador), la consulta se cierra
-  y su borrador se descarta: nunca pasa al otro paciente. El aviso antes de descartar está pendiente (ADR-034 de
-  `urgencia-bahmni`). Punto tocado: `apps/clinical/src/pages/ConsultationPage.tsx`.
+  y su borrador se descarta: nunca pasa al otro paciente, y aparece un aviso (ADR-034 de `urgencia-bahmni`).
+- **Clínico, consulta:** banda sobre los dos paneles, modos, temas y confirmaciones al salir. El código está en
+  `apps/clinical/src/chile/consulta/`; los puntos tocados de Bahmni son `pages/ConsultationPage.tsx`,
+  `components/consultationPad/index.tsx` y `providers/clinicalConfig/models.ts`.
+
+## Temas de la consulta (configuración de cada centro)
+
+En `openmrs/apps/clinical/v2/app.json`, dentro de `consultationPad`. Sin esta clave, la consulta queda como en Bahmni.
+
+```json
+"tabs": [
+  { "id": "evaluacion", "label": "CONSULTATION_TAB_EVALUATION", "inputControls": ["allergies", "immunizationHistory"] },
+  { "id": "diagnosticos", "label": "CONSULTATION_TAB_DIAGNOSES", "inputControls": ["conditionsAndDiagnoses"] },
+  { "id": "tratamiento", "label": "CONSULTATION_TAB_TREATMENT", "inputControls": ["medication", "vaccination", "immunizationAdministration"] },
+  { "id": "ordenes", "label": "CONSULTATION_TAB_ORDERS", "inputControls": ["investigations"] },
+  { "id": "formularios", "label": "CONSULTATION_TAB_FORMS", "inputControls": ["observationForms"] }
+]
+```
+
+- `label` es una clave de traducción: agréguela en `openmrs/i18n/clinical/locale_<idioma>.json`.
+- `inputControls` usa el `type` de cada control. Lo no listado aparece en «Otros».
+- Los temas sin controles visibles para el rol no se muestran. Con un solo tema, o en una edición puntual, no hay barra.
 
 ## Desarrollo contra el laboratorio FHIR del 115
 
