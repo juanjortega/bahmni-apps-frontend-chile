@@ -85,6 +85,10 @@ const addSectionIds = (config: DashboardConfig): DashboardConfig => {
  *
  * @returns React component with clinical consultation interface
  */
+// Mínimos del modo lateral (ADR-033 y ADR-034).
+const CHART_MIN_SIZE = '360px';
+const CONSULTATION_MIN_SIZE = '560px';
+
 const ConsultationPage: React.FC = () => {
   const { t } = useTranslation();
   const { clinicalConfig, isLoading: clinicalConfigLoading } =
@@ -96,7 +100,9 @@ const ConsultationPage: React.FC = () => {
   // Distribución chilena (ADR-034): la ficha oculta la consulta sin desmontarla, y se recuerda el modo elegido.
   const [isConsultationHidden, setIsConsultationHidden] = useState(false);
   const { user: activeUser } = useActivePractitioner();
-  const { preferred, remember } = useConsultationPreference(activeUser?.uuid);
+  const { preferred, preferredSplit, remember, rememberSplit } =
+    useConsultationPreference(activeUser?.uuid);
+  const [chartSplit, setChartSplit] = useState(preferredSplit.current);
   const consultationMode: ConsultationMode = isConsultationHidden
     ? 'ficha'
     : isActionAreaExpanded
@@ -116,7 +122,8 @@ const ConsultationPage: React.FC = () => {
       setIsActionAreaVisible(true);
       setIsConsultationHidden(false);
       setIsActionAreaExpanded(preferred.current === 'completa');
-    }, []),
+      setChartSplit(preferredSplit.current);
+    }, [preferred, preferredSplit]),
   );
   const [searchParams] = useSearchParams();
 
@@ -439,6 +446,12 @@ const ConsultationPage: React.FC = () => {
           }
           isActionAreaVisible={isActionAreaVisible}
           isActionAreaExpanded={isActionAreaExpanded}
+          mainDisplaySize={chartSplit}
+          mainDisplayMinSize={CHART_MIN_SIZE}
+          actionAreaMinSize={CONSULTATION_MIN_SIZE}
+          onSplitChange={
+            consultationMode === 'lateral' ? rememberSplit : undefined
+          }
           layoutVariant={viewingForm ? 'extended' : 'default'}
           actionArea={
             consultationPayload && (

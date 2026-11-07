@@ -39,7 +39,9 @@ Con una consulta abierta, la banda del paciente muestra tres botones. **Cambiar 
 | **Atención lateral** | La ficha a la izquierda y la consulta a la derecha |
 | **Pantalla completa** | Solo la consulta, en la misma ventana |
 
-La próxima consulta se abre en el último modo que eligió, entre **Atención lateral** y **Pantalla completa**. Se guarda en su usuario; si no se puede, queda solo en este navegador y aparece un aviso.
+En **Atención lateral** puede arrastrar la división entre la ficha y la consulta.
+
+La próxima consulta se abre en el último modo que eligió, entre **Atención lateral** y **Pantalla completa**, y con la misma división. Se guarda en su usuario; si no se puede, queda solo en este navegador y aparece un aviso.
 
 ## Temas de la consulta
 Si su centro los configuró, la consulta se ordena por temas en una barra, por ejemplo **Evaluación**, **Diagnósticos**, **Tratamiento**, **Órdenes** y **Formularios**.
