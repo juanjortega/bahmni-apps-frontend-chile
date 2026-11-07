@@ -3,83 +3,84 @@
 exports[`ConsultationPage Snapshot should match the snapshot 1`] = `
 <DocumentFragment>
   <div
-    data-layout-variant="default"
-    data-testid="mocked-clinical-layout"
+    class="modeLateral"
   >
     <div
-      data-testid="mocked-header"
+      data-layout-variant="default"
+      data-testid="mocked-clinical-layout"
     >
       <div
-        data-testid="mocked-header-component"
+        data-testid="mocked-header"
       >
-        <button
-          data-testid="global-action-search"
-          tabindex="0"
-        >
-          Search
-        </button>
         <div
-          data-testid="user-global-action"
-        />
-        <div
-          data-testid="sidenav-item-vitals"
-          role="button"
-          tabindex="0"
+          data-testid="mocked-header-component"
         >
-          VITALS_SECTION
+          <div
+            data-testid="user-global-action"
+          />
+          <div
+            data-testid="sidenav-item-vitals"
+            role="button"
+            tabindex="0"
+          >
+            VITALS_SECTION
+          </div>
+          <div
+            data-testid="active-sidenav-item"
+          >
+            vitals
+          </div>
+          <div
+            data-testid="breadcrumb-item-home"
+          >
+            Home
+          </div>
+          <div
+            data-testid="breadcrumb-item-clinical"
+          >
+            Clinical
+          </div>
+          <div
+            data-testid="breadcrumb-item-current"
+          >
+            Current Patient
+          </div>
         </div>
         <div
-          data-testid="active-sidenav-item"
+          aria-label="Patient Information Section"
+          class="band withSideNav"
+          data-testid="section-sticky-header-test-id"
+          id="section-sticky-header"
+          role="region"
         >
-          vitals
-        </div>
-        <div
-          data-testid="breadcrumb-item-home"
-        >
-          Home
-        </div>
-        <div
-          data-testid="breadcrumb-item-clinical"
-        >
-          Clinical
-        </div>
-        <div
-          data-testid="breadcrumb-item-current"
-        >
-          Current Patient
+          <div
+            data-testid="mocked-patient-header"
+          />
+          <div
+            class="bandRow"
+          />
         </div>
       </div>
-    </div>
-    <div
-      data-testid="mocked-patient-section"
-    />
-    <div
-      data-testid="mocked-sidebar"
-    />
-    <div
-      data-testid="mocked-main-display"
-    >
       <div
-        aria-label="Patient Information Section"
-        class="stickySection"
-        data-testid="section-sticky-header-test-id"
-        id="section-sticky-header"
-        role="region"
+        data-testid="mocked-patient-section"
+      />
+      <div
+        data-testid="mocked-sidebar"
+      />
+      <div
+        data-testid="mocked-main-display"
       >
         <div
-          data-testid="mocked-patient-header"
-        />
-      </div>
-      <div
-        data-active-item="vitals"
-        data-scroll-trigger="0"
-        data-testid="dashboard-container"
-      >
-        <article
-          data-testid="dashboard-section-article-Vitals"
+          data-active-item="vitals"
+          data-scroll-trigger="0"
+          data-testid="dashboard-container"
         >
-          Vitals
-        </article>
+          <article
+            data-testid="dashboard-section-article-Vitals"
+          >
+            Vitals
+          </article>
+        </div>
       </div>
     </div>
   </div>

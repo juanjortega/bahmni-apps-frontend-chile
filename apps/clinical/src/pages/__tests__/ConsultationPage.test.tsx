@@ -1,8 +1,13 @@
-import { getConfig, getFormattedPatientById } from '@bahmni/services';
+import {
+  getConfig,
+  getFormattedPatientById,
+  dispatchConsultationStart,
+} from '@bahmni/services';
 import {
   useHasPrivilege,
   useNotification,
   useUserPrivilege,
+  useActivePractitioner,
   usePatientUUID,
 } from '@bahmni/widgets';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -16,8 +21,7 @@ import {
 import i18n from 'i18next';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import React, { ReactNode } from 'react';
-import { MemoryRouter } from 'react-router-dom';
-import { dispatchConsultationStart } from '../../events/startConsultation';
+import { MemoryRouter } from 'react-router';
 import { useClinicalConfig } from '../../providers/clinicalConfig';
 import ConsultationPage from '../ConsultationPage';
 
@@ -117,9 +121,10 @@ jest.mock('@bahmni/design-system', () => ({
       {description}
     </div>
   )),
-  Button: jest.fn(({ children, onClick, style }) => (
+  Button: jest.fn(({ children, onClick, style, ...rest }) => (
     <button
-      data-testid="carbon-button"
+      data-testid={rest['data-testid'] ?? 'carbon-button'}
+      aria-pressed={rest['aria-pressed']}
       onClick={onClick}
       data-style={JSON.stringify(style)}
     >
@@ -215,6 +220,7 @@ jest.mock('@bahmni/design-system', () => ({
 jest.mock('@bahmni/widgets', () => ({
   ...jest.requireActual('@bahmni/widgets'),
   useUserPrivilege: jest.fn(),
+  useActivePractitioner: jest.fn(),
   useHasPrivilege: jest.fn(),
   useNotification: jest.fn(),
   usePatientUUID: jest.fn(),
@@ -312,6 +318,7 @@ describe('ConsultationPage', () => {
 
     (usePatientUUID as jest.Mock).mockReturnValue(null);
     (getFormattedPatientById as jest.Mock).mockResolvedValue(null);
+    (useActivePractitioner as jest.Mock).mockReturnValue({ user: undefined });
   });
 
   afterEach(() => {
@@ -1011,7 +1018,9 @@ describe('ConsultationPage', () => {
       });
 
       act(() => {
-        dispatchConsultationStart({ encounterType: 'Consultation' });
+        dispatchConsultationStart({
+          context: { encounterType: 'Consultation' },
+        });
       });
 
       await waitFor(() => {
@@ -1044,7 +1053,9 @@ describe('ConsultationPage', () => {
       });
 
       act(() => {
-        dispatchConsultationStart({ encounterType: 'Consultation' });
+        dispatchConsultationStart({
+          context: { encounterType: 'Consultation' },
+        });
       });
 
       await waitFor(() => {
@@ -1068,7 +1079,9 @@ describe('ConsultationPage', () => {
       });
 
       act(() => {
-        dispatchConsultationStart({ encounterType: 'Consultation' });
+        dispatchConsultationStart({
+          context: { encounterType: 'Consultation' },
+        });
       });
 
       await waitFor(() => {
@@ -1079,6 +1092,179 @@ describe('ConsultationPage', () => {
       expect(screen.getByTestId('toggle-expand-button')).toHaveTextContent(
         'Expand',
       );
+    });
+  });
+
+  describe('Distribución chilena: modos de la consulta', () => {
+    const openConsultation = async () => {
+      (usePatientUUID as jest.Mock).mockReturnValue('patient-a');
+      (getFormattedPatientById as jest.Mock).mockResolvedValue({
+        fullName: 'John Doe',
+      });
+      renderWithProvider();
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('consultation-mode-switch'),
+        ).toBeInTheDocument();
+      });
+    };
+
+    afterEach(() => localStorage.clear());
+
+    it('no ofrece modos sin una consulta abierta', async () => {
+      renderWithProvider();
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('consultation-mode-switch'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('la ficha oculta la consulta sin desmontarla', async () => {
+      await openConsultation();
+
+      fireEvent.click(screen.getByTestId('consultation-mode-ficha'));
+
+      expect(screen.getByTestId('mocked-consultation-pad')).toBeInTheDocument();
+      expect(screen.getByTestId('consultation-mode-ficha')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+      fireEvent.click(screen.getByTestId('consultation-mode-lateral'));
+      expect(screen.getByTestId('consultation-mode-lateral')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    });
+
+    it('recuerda la pantalla completa para la próxima consulta', async () => {
+      await openConsultation();
+
+      fireEvent.click(screen.getByTestId('consultation-mode-completa'));
+      expect(screen.getByTestId('toggle-expand-button')).toHaveTextContent(
+        'Collapse',
+      );
+      fireEvent.click(screen.getByTestId('close-consultation-pad-button'));
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('mocked-consultation-pad'),
+        ).not.toBeInTheDocument();
+      });
+
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId('toggle-expand-button')).toHaveTextContent(
+          'Collapse',
+        );
+      });
+    });
+  });
+
+  describe('Distribución chilena: un error de lectura no borra la consulta', () => {
+    it('keeps the consultation open when a background dashboard read fails', async () => {
+      (useUserPrivilege as jest.Mock).mockReturnValue({
+        userPrivileges: [{ uuid: '1', name: 'VIEW_PATIENTS' }],
+      });
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/consultation']}>
+            <ConsultationPage />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('mocked-consultation-pad'),
+        ).toBeInTheDocument();
+      });
+
+      (getConfig as jest.Mock).mockRejectedValue(new Error('Red caída'));
+      await act(async () => {
+        await queryClient.refetchQueries({ queryKey: ['dashboardConfig'] });
+      });
+
+      await waitFor(() => {
+        expect(useNotification().addNotification).toHaveBeenCalled();
+      });
+      expect(
+        screen.queryByTestId('error-loading-dashboard-config-test-id'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('mocked-consultation-pad')).toBeInTheDocument();
+    });
+  });
+
+  describe('Distribución chilena: el paciente no cambia con una consulta abierta', () => {
+    it('no ofrece la búsqueda de pacientes en la barra', async () => {
+      renderWithProvider();
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('mocked-header-component'),
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('global-action-search'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('cierra la consulta al cambiar de paciente, sin abrirla para el otro', async () => {
+      (getFormattedPatientById as jest.Mock).mockResolvedValue({
+        fullName: 'John Doe',
+      });
+      (usePatientUUID as jest.Mock).mockReturnValue('patient-a');
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      const ui = () => (
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/consultation']}>
+            <ConsultationPage />
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+      const { rerender } = render(ui());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      act(() => {
+        dispatchConsultationStart({ encounterType: 'Consultation' });
+      });
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('mocked-consultation-pad'),
+        ).toBeInTheDocument();
+      });
+
+      (usePatientUUID as jest.Mock).mockReturnValue('patient-b');
+      rerender(ui());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('dashboard-container')).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('mocked-consultation-pad'),
+      ).not.toBeInTheDocument();
     });
   });
 });

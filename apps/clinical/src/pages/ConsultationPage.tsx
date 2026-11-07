@@ -1,8 +1,6 @@
 import {
   Loading,
-  Icon,
   Header,
-  ICON_SIZE,
   useSidebarNavigation,
   ActionAreaLayout,
 } from '@bahmni/design-system';
@@ -15,11 +13,16 @@ import {
   capitalize,
   hasPrivilege,
   PATIENT_NOT_FOUND_ERROR_KEY,
+  type ConsultationEventPayload,
+  useSubscribeConsultationStart,
 } from '@bahmni/services';
 import {
+  LocationProvider,
+  LocationSelector,
   ProgramDetails,
   useNotification,
   useUserPrivilege,
+  useActivePractitioner,
   usePatientUUID,
   UserGlobalAction,
 } from '@bahmni/widgets';
@@ -31,14 +34,20 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
+import {
+  type ConsultationMode,
+  ConsultationModeSwitch,
+} from '../chile/consulta/ConsultationModeSwitch';
+import { LanguageSelector } from '../chile/consulta/LanguageSelector';
+import { PatientAllergies } from '../chile/consulta/PatientAllergies';
+import bandStyles from '../chile/consulta/styles/consulta.module.scss';
+import { useConsultationPreference } from '../chile/consulta/useConsultationPreference';
+import { useDiscardedOnPatientChange } from '../chile/consulta/useDiscardedOnPatientChange';
 import ConsultationPadContainer from '../components/consultationPadContainer';
 import DashboardContainer from '../components/dashboardContainer/DashboardContainer';
 import PatientHeader from '../components/patientHeader/PatientHeader';
-import PatientSearch from '../components/patientSearch/PatientSearch';
 import { BAHMNI_CLINICAL_PATH } from '../constants/app';
-import type { EncounterSessionStartContext } from '../events/startConsultation';
-import { useSubscribeConsultationStart } from '../events/startConsultation';
 import { ClinicalAppProvider } from '../providers/ClinicalAppProvider';
 import { useClinicalConfig } from '../providers/clinicalConfig';
 import { useObservationFormsStore } from '../stores/observationFormsStore';
@@ -50,7 +59,6 @@ import {
 } from './constant';
 import { DashboardConfig } from './models';
 import dashboardConfigSchema from './schema.json';
-import styles from './styles/ConsultationPage.module.scss';
 import {
   getDefaultDashboard,
   getSidebarItems,
@@ -77,6 +85,10 @@ const addSectionIds = (config: DashboardConfig): DashboardConfig => {
  *
  * @returns React component with clinical consultation interface
  */
+// Mínimos del modo lateral (ADR-033 y ADR-034).
+const CHART_MIN_SIZE = '360px';
+const CONSULTATION_MIN_SIZE = '560px';
+
 const ConsultationPage: React.FC = () => {
   const { t } = useTranslation();
   const { clinicalConfig, isLoading: clinicalConfigLoading } =
@@ -85,35 +97,44 @@ const ConsultationPage: React.FC = () => {
   const { addNotification } = useNotification();
   const [isActionAreaVisible, setIsActionAreaVisible] = useState(false);
   const [isActionAreaExpanded, setIsActionAreaExpanded] = useState(false);
-  const [encounterSessionStartContext, setEncounterSessionStartContext] =
-    useState<EncounterSessionStartContext | null>(null);
+  // Distribución chilena (ADR-034): la ficha oculta la consulta sin desmontarla, y se recuerda el modo elegido.
+  const [isConsultationHidden, setIsConsultationHidden] = useState(false);
+  const { user: activeUser } = useActivePractitioner();
+  const { preferred, preferredSplit, remember, rememberSplit } =
+    useConsultationPreference(activeUser?.uuid);
+  const [chartSplit, setChartSplit] = useState(preferredSplit.current);
+  const consultationMode: ConsultationMode = isConsultationHidden
+    ? 'ficha'
+    : isActionAreaExpanded
+      ? 'completa'
+      : 'lateral';
+  // Pantalla completa desmonta el separador y, al volver, los paneles toman su tamaño inicial: por eso se actualiza.
+  const handleSplitChange = (percent: number) => {
+    setChartSplit(percent);
+    rememberSplit(percent);
+  };
+  const handleModeChange = (mode: ConsultationMode) => {
+    setIsConsultationHidden(mode === 'ficha');
+    setIsActionAreaExpanded(mode === 'completa');
+    if (mode !== 'ficha') remember(mode);
+  };
+  const [consultationPayload, setConsultationPayload] =
+    useState<ConsultationEventPayload | null>(null);
 
   useSubscribeConsultationStart(
-    useCallback((event) => {
-      setEncounterSessionStartContext(event);
-      setIsActionAreaVisible(true);
-      setIsActionAreaExpanded(false);
-    }, []),
+    useCallback(
+      (event) => {
+        setConsultationPayload(event);
+        setIsActionAreaVisible(true);
+        setIsConsultationHidden(false);
+        setIsActionAreaExpanded(preferred.current === 'completa');
+        setChartSplit(preferredSplit.current);
+      },
+      [preferred, preferredSplit],
+    ),
   );
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchParams] = useSearchParams();
 
-  const handleSearchOpen = useCallback(() => setIsSearchOpen(true), []);
-  const handleSearchClose = useCallback(() => setIsSearchOpen(false), []);
-
-  const globalActions = useMemo(
-    () => [
-      {
-        id: 'search',
-        label: t('GLOBAL_ACTION_SEARCH'),
-        renderIcon: (
-          <Icon id="search-icon" name="fa-search" size={ICON_SIZE.LG} />
-        ),
-        onClick: handleSearchOpen,
-      },
-    ],
-    [handleSearchOpen, t],
-  );
   const viewingForm = useObservationFormsStore((state) => state.viewingForm);
 
   const patientUUID = usePatientUUID();
@@ -306,7 +327,8 @@ const ConsultationPage: React.FC = () => {
       />
     );
   }
-  if (dashboardConfigError || !filteredDashboardConfig) {
+  // Distribución chilena: una lectura fallida con datos en caché solo avisa; reemplazar la página borraría el borrador.
+  if (!filteredDashboardConfig) {
     return (
       <div
         id="error-loading-dashboard-config"
@@ -333,95 +355,147 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids} patientId={patientUUID}>
-      {/* Rendered outside ActionAreaLayout: uses position:fixed to overlay the header area.
-          Placed here (inside ClinicalAppProvider) so it has access to clinical context. */}
-      <PatientSearch isOpen={isSearchOpen} onClose={handleSearchClose} />
-      <ActionAreaLayout
-        headerWSideNav={
-          <Header
-            breadcrumbItems={breadcrumbItems}
-            globalActions={globalActions}
-            userMenu={<UserGlobalAction />}
-            sideNavItems={isActionAreaExpanded ? [] : sidebarItems}
-            activeSideNavItemId={activeItemId}
-            onSideNavItemClick={handleItemClick}
-            isRail={isActionAreaVisible}
-          />
+      <div
+        className={
+          isConsultationHidden ? bandStyles.modeChart : bandStyles.modeLateral
         }
-        mainDisplay={
-          <Suspense
-            data-testid="suspense-dashboard-container-test-id"
-            fallback={
-              <Loading
-                id="loading-dashboard-content"
-                data-testid="loading-dashboard-content-test-id"
-                description={t('LOADING_DASHBOARD_CONTENT')}
-                role="status"
+      >
+        <ActionAreaLayout
+          headerWSideNav={
+            <>
+              <Header
+                breadcrumbItems={breadcrumbItems}
+                globalFeatures={[
+                  <div key="location" className={bandStyles.headerSelector}>
+                    <LocationProvider>
+                      <LocationSelector />
+                    </LocationProvider>
+                  </div>,
+                  <div key="language" className={bandStyles.headerSelector}>
+                    <LanguageSelector />
+                  </div>,
+                ]}
+                userMenu={<UserGlobalAction />}
+                sideNavItems={isActionAreaExpanded ? [] : sidebarItems}
+                activeSideNavItemId={activeItemId}
+                onSideNavItemClick={handleItemClick}
+                isRail={isActionAreaVisible}
               />
-            }
-          >
-            {patientUUID && isPatientPending && (
-              <Loading
-                id="loading-patient"
-                data-testid="loading-patient-test-id"
-                description={t('LOADING_PATIENT_DATA')}
-                role="status"
-              />
-            )}
-            {patientErrorMessageKey && (
-              <div
-                id="error-loading-patient"
-                data-testid="error-loading-patient-test-id"
-                role="alert"
-              >
-                {t(patientErrorMessageKey)}
-              </div>
-            )}
-            {shouldRenderPatientContent && (
-              <>
+              {/* Distribución chilena (ADR-034): la banda va sobre los dos paneles y se ve en todos los modos. */}
+              {shouldRenderPatientContent && (
                 <div
                   id="section-sticky-header"
                   data-testid="section-sticky-header-test-id"
                   role="region"
                   aria-label={t('PATIENT_HEADER_SECTION')}
-                  className={styles.stickySection}
+                  className={[
+                    bandStyles.band,
+                    !isActionAreaExpanded &&
+                      (isActionAreaVisible
+                        ? bandStyles.withRail
+                        : bandStyles.withSideNav),
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   <PatientHeader
                     isActionAreaVisible={isActionAreaVisible}
                     printOptions={filteredPrintOptions}
                   />
+                  <div className={bandStyles.bandRow}>
+                    {patientUUID && (
+                      <PatientAllergies patientUuid={patientUUID} />
+                    )}
+                    {isActionAreaVisible && (
+                      <ConsultationModeSwitch
+                        mode={consultationMode}
+                        onChange={handleModeChange}
+                      />
+                    )}
+                  </div>
                   {renderContextInformation()}
                 </div>
+              )}
+            </>
+          }
+          mainDisplay={
+            <Suspense
+              data-testid="suspense-dashboard-container-test-id"
+              fallback={
+                <Loading
+                  id="loading-dashboard-content"
+                  data-testid="loading-dashboard-content-test-id"
+                  description={t('LOADING_DASHBOARD_CONTENT')}
+                  role="status"
+                />
+              }
+            >
+              {patientUUID && isPatientPending && (
+                <Loading
+                  id="loading-patient"
+                  data-testid="loading-patient-test-id"
+                  description={t('LOADING_PATIENT_DATA')}
+                  role="status"
+                />
+              )}
+              {patientErrorMessageKey && (
+                <div
+                  id="error-loading-patient"
+                  data-testid="error-loading-patient-test-id"
+                  role="alert"
+                >
+                  {t(patientErrorMessageKey)}
+                </div>
+              )}
+              {shouldRenderPatientContent && (
                 <DashboardContainer
                   sections={filteredDashboardConfig!.sections}
                   activeItemId={activeItemId}
                   scrollTrigger={scrollTrigger}
                 />
-              </>
-            )}
-          </Suspense>
-        }
-        isActionAreaVisible={isActionAreaVisible}
-        isActionAreaExpanded={isActionAreaExpanded}
-        layoutVariant={viewingForm ? 'extended' : 'default'}
-        actionArea={
-          encounterSessionStartContext && (
-            <ConsultationPadContainer
-              encounterSessionStartContext={encounterSessionStartContext}
-              onClose={() => {
-                setIsActionAreaVisible((prev) => !prev);
-                setIsActionAreaExpanded(false);
-              }}
-              isActionAreaExpanded={isActionAreaExpanded}
-              onToggleActionAreaExpand={() =>
-                setIsActionAreaExpanded((prev) => !prev)
-              }
-            />
-          )
-        }
-      />
+              )}
+            </Suspense>
+          }
+          isActionAreaVisible={isActionAreaVisible}
+          isActionAreaExpanded={isActionAreaExpanded}
+          mainDisplaySize={chartSplit}
+          mainDisplayMinSize={CHART_MIN_SIZE}
+          actionAreaMinSize={CONSULTATION_MIN_SIZE}
+          onSplitChange={
+            consultationMode === 'lateral' ? handleSplitChange : undefined
+          }
+          layoutVariant={viewingForm ? 'extended' : 'default'}
+          actionArea={
+            consultationPayload && (
+              <ConsultationPadContainer
+                encounterSessionStartContext={consultationPayload}
+                onClose={() => {
+                  setIsActionAreaVisible((prev) => !prev);
+                  setIsActionAreaExpanded(false);
+                  setIsConsultationHidden(false);
+                }}
+                isActionAreaExpanded={isActionAreaExpanded}
+                onToggleActionAreaExpand={() =>
+                  setIsActionAreaExpanded((prev) => !prev)
+                }
+              />
+            )
+          }
+        />
+      </div>
     </ClinicalAppProvider>
   );
 };
 
-export default ConsultationPage;
+/**
+ * Distribución chilena: la ruta `:patientUuid` reutiliza el mismo componente al cambiar de paciente (por ejemplo, con
+ * Atrás del navegador). La clave lo vuelve a montar: la consulta abierta se cierra y su borrador se descarta, porque
+ * nunca debe pasar al otro paciente.
+ */
+const ConsultationPageForPatient: React.FC = () => {
+  const patientUUID = usePatientUUID();
+  useDiscardedOnPatientChange(patientUUID);
+  return <ConsultationPage key={patientUUID ?? 'no-patient'} />;
+};
+
+export default ConsultationPageForPatient;
