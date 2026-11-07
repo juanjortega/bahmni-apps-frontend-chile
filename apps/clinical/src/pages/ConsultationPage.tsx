@@ -117,13 +117,16 @@ const ConsultationPage: React.FC = () => {
     useState<ConsultationEventPayload | null>(null);
 
   useSubscribeConsultationStart(
-    useCallback((event) => {
-      setConsultationPayload(event);
-      setIsActionAreaVisible(true);
-      setIsConsultationHidden(false);
-      setIsActionAreaExpanded(preferred.current === 'completa');
-      setChartSplit(preferredSplit.current);
-    }, [preferred, preferredSplit]),
+    useCallback(
+      (event) => {
+        setConsultationPayload(event);
+        setIsActionAreaVisible(true);
+        setIsConsultationHidden(false);
+        setIsActionAreaExpanded(preferred.current === 'completa');
+        setChartSplit(preferredSplit.current);
+      },
+      [preferred, preferredSplit],
+    ),
   );
   const [searchParams] = useSearchParams();
 
