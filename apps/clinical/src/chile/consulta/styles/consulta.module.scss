@@ -73,12 +73,13 @@
 
 // Modo ficha: la consulta queda montada y oculta, y el tablero ocupa todo el ancho.
 .modeChart {
-  [data-panel]:has(#action-display-area),
-  :global(#panel-separator) {
+  // Por atributo: CSS Modules renombra los `#id`, y la regla dejaría de aplicar sin avisar.
+  [data-testid='action-area-panel'],
+  [data-testid='panel-separator-test-id'] {
     display: none !important;
   }
 
-  [data-panel]:has(#main-display-area) {
+  [data-testid='main-display-panel'] {
     flex: 1 1 100% !important;
     min-width: 100% !important;
   }

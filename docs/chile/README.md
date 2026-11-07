@@ -27,7 +27,7 @@ En `openmrs/apps/clinical/v2/app.json`, dentro de `consultationPad`. Sin esta cl
 "tabs": [
   { "id": "evaluacion", "label": "CONSULTATION_TAB_EVALUATION", "inputControls": ["allergies", "immunizationHistory"] },
   { "id": "diagnosticos", "label": "CONSULTATION_TAB_DIAGNOSES", "inputControls": ["conditionsAndDiagnoses"] },
-  { "id": "tratamiento", "label": "CONSULTATION_TAB_TREATMENT", "inputControls": ["medication", "vaccination", "immunizationAdministration"] },
+  { "id": "tratamiento", "label": "CONSULTATION_TAB_TREATMENT", "inputControls": ["medication", "stopMedications", "vaccination", "immunizationAdministration"] },
   { "id": "ordenes", "label": "CONSULTATION_TAB_ORDERS", "inputControls": ["investigations"] },
   { "id": "formularios", "label": "CONSULTATION_TAB_FORMS", "inputControls": ["observationForms"] }
 ]
