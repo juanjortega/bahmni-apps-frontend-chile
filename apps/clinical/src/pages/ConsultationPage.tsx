@@ -350,7 +350,11 @@ const ConsultationPage: React.FC = () => {
 
   return (
     <ClinicalAppProvider episodeUuids={episodeUuids} patientId={patientUUID}>
-      <div className={isConsultationHidden ? bandStyles.modeChart : undefined}>
+      <div
+        className={
+          isConsultationHidden ? bandStyles.modeChart : bandStyles.modeLateral
+        }
+      >
         <ActionAreaLayout
           headerWSideNav={
             <>

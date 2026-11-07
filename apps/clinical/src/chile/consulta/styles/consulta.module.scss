@@ -74,14 +74,28 @@
 // Modo ficha: la consulta queda montada y oculta, y el tablero ocupa todo el ancho.
 .modeChart {
   // Por atributo: CSS Modules renombra los `#id`, y la regla dejaría de aplicar sin avisar.
-  [data-testid='action-area-panel'],
-  [data-testid='panel-separator-test-id'] {
+  [data-testid="action-area-panel"],
+  [data-testid="panel-separator"] {
     display: none !important;
   }
 
-  [data-testid='main-display-panel'] {
+  [data-testid="main-display-panel"] {
     flex: 1 1 100% !important;
     min-width: 100% !important;
+  }
+}
+
+// Modo lateral: reemplaza el mínimo de 40 % de ActionAreaLayout por los píxeles de ADR-033. La especificidad supera a esa
+// regla y queda bajo la de `.expanded`, que debe seguir mandando en pantalla completa. En pantallas chicas, sin cambios.
+@media (min-width: 66rem) {
+  .modeLateral {
+    div[data-testid="main-display-panel"][data-panel] {
+      min-width: 360px !important;
+    }
+
+    div[data-testid="action-area-panel"][data-panel] {
+      min-width: 560px !important;
+    }
   }
 }
 
