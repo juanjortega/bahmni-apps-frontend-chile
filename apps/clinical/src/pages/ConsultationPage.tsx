@@ -108,6 +108,11 @@ const ConsultationPage: React.FC = () => {
     : isActionAreaExpanded
       ? 'completa'
       : 'lateral';
+  // Pantalla completa desmonta el separador y, al volver, los paneles toman su tamaño inicial: por eso se actualiza.
+  const handleSplitChange = (percent: number) => {
+    setChartSplit(percent);
+    rememberSplit(percent);
+  };
   const handleModeChange = (mode: ConsultationMode) => {
     setIsConsultationHidden(mode === 'ficha');
     setIsActionAreaExpanded(mode === 'completa');
@@ -457,7 +462,7 @@ const ConsultationPage: React.FC = () => {
           mainDisplayMinSize={CHART_MIN_SIZE}
           actionAreaMinSize={CONSULTATION_MIN_SIZE}
           onSplitChange={
-            consultationMode === 'lateral' ? rememberSplit : undefined
+            consultationMode === 'lateral' ? handleSplitChange : undefined
           }
           layoutVariant={viewingForm ? 'extended' : 'default'}
           actionArea={
